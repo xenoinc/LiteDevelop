@@ -1,22 +1,22 @@
 // SelectReferenceDialog.cs
-//  
+//
 // Author:
 //       Todd Berman <tberman@sevenl.net>
 //       Lluis Sanchez Gual <lluis@novell.com>
-// 
+//
 // Copyright (c) 2004 Todd Berman
 // Copyright (c) 2009 Novell, Inc (http://www.novell.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,6 +37,9 @@ using MonoDevelop.Components;
 using MonoDevelop.Components.Commands;
 using System.IO;
 using System.Runtime.InteropServices;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects
 {
@@ -46,11 +49,11 @@ namespace MonoDevelop.Ide.Projects
 		void SignalRefChange (ProjectReference refInfo, bool newState);
 		void SetFilter (string filter);
 	}
-	
+
 	internal partial class SelectReferenceDialog: Gtk.Dialog
 	{
 		ListStore refTreeStore;
-		
+
 		PackageReferencePanel packageRefPanel;
 		PackageReferencePanel allRefPanel;
 		ProjectReferencePanel projectRefPanel;
@@ -59,21 +62,21 @@ namespace MonoDevelop.Ide.Projects
 		List<IReferencePanel> panels = new List<IReferencePanel> ();
 		Notebook mainBook;
 		CombinedBox combinedBox;
-		SearchEntry filterEntry;
+		MonoDevelop.Components.SearchEntry filterEntry;
 
 		Dictionary<FilePath,List<FilePath>> recentFiles;
 		bool recentFilesModified = false;
 
 		static FilePath RecentAssembliesFile = UserProfile.Current.CacheDir.Combine ("RecentAssemblies2.txt");
 		const int RecentFileListSize = 75;
-		
+
 		const int NameColumn = 0;
 		const int SecondaryNameColumn = 1;
 		const int TypeNameColumn = 2;
 		const int LocationColumn = 3;
 		const int ProjectReferenceColumn = 4;
 		const int IconColumn = 5;
-		
+
 		public ProjectReferenceCollection ReferenceInformations {
 			get {
 				ProjectReferenceCollection referenceInformations = new ProjectReferenceCollection();
@@ -92,7 +95,7 @@ namespace MonoDevelop.Ide.Projects
 		{
 			filterEntry.Sensitive = args.PageNum != 3;
 		}
-		
+
 		public void SetProject (DotNetProject configureProject)
 		{
 			this.configureProject = configureProject;
@@ -109,12 +112,12 @@ namespace MonoDevelop.Ide.Projects
 
 			OnChanged (null, null);
 		}
-		
+
 		TreeIter AppendReference (ProjectReference refInfo)
 		{
 			foreach (var p in panels)
 				p.SignalRefChange (refInfo, true);
-			
+
 			switch (refInfo.ReferenceType) {
 				case ReferenceType.Assembly:
 					return AddAssemplyReference (refInfo);
@@ -178,7 +181,7 @@ namespace MonoDevelop.Ide.Projects
 			filterEntry = combinedBox.FilterEntry;
 
 			boxRefs.WidthRequest = 200;
-			
+
 			refTreeStore = new ListStore (typeof (string), typeof(string), typeof(string), typeof(string), typeof(ProjectReference), typeof(Xwt.Drawing.Image));
 			ReferencesTreeView.Model = refTreeStore;
 
@@ -193,11 +196,11 @@ namespace MonoDevelop.Ide.Projects
 			col.AddAttribute (text_render, "text-markup", NameColumn);
 			col.AddAttribute (text_render, "secondary-text-markup", SecondaryNameColumn);
 			text_render.Ellipsize = Pango.EllipsizeMode.End;
-			
+
 			ReferencesTreeView.AppendColumn (col);
 //			ReferencesTreeView.AppendColumn (GettextCatalog.GetString ("Type"), new CellRendererText (), "text", TypeNameColumn);
 //			ReferencesTreeView.AppendColumn (GettextCatalog.GetString ("Location"), new CellRendererText (), "text", LocationColumn);
-			
+
 			projectRefPanel = new ProjectReferencePanel (this);
 			packageRefPanel = new PackageReferencePanel (this, false);
 			allRefPanel = new PackageReferencePanel (this, true);
@@ -206,39 +209,39 @@ namespace MonoDevelop.Ide.Projects
 			panels.Add (packageRefPanel);
 			panels.Add (projectRefPanel);
 			panels.Add (assemblyRefPanel);
-			
+
 			//mainBook.RemovePage (mainBook.CurrentPage);
-			
+
 			HBox tab = new HBox (false, 3);
 //			tab.PackStart (new Image (ImageService.GetPixbuf (MonoDevelop.Ide.Gui.Stock.Reference, IconSize.Menu)), false, false, 0);
 			tab.PackStart (new Label (GettextCatalog.GetString ("_All")), true, true, 0);
 			tab.BorderWidth = 3;
 			tab.ShowAll ();
 			mainBook.AppendPage (allRefPanel, tab);
-			
+
 			tab = new HBox (false, 3);
 //			tab.PackStart (new Image (ImageService.GetPixbuf (MonoDevelop.Ide.Gui.Stock.Package, IconSize.Menu)), false, false, 0);
 			tab.PackStart (new Label (GettextCatalog.GetString ("_Packages")), true, true, 0);
 			tab.BorderWidth = 3;
 			tab.ShowAll ();
 			mainBook.AppendPage (packageRefPanel, tab);
-			
+
 			tab = new HBox (false, 3);
 //			tab.PackStart (new Image (ImageService.GetPixbuf (MonoDevelop.Ide.Gui.Stock.Project, IconSize.Menu)), false, false, 0);
 			tab.PackStart (new Label (GettextCatalog.GetString ("Pro_jects")), true, true, 0);
 			tab.BorderWidth = 3;
 			tab.ShowAll ();
 			mainBook.AppendPage (projectRefPanel, tab);
-			
+
 			tab = new HBox (false, 3);
 //			tab.PackStart (new Image (ImageService.GetPixbuf (MonoDevelop.Ide.Gui.Stock.OpenFolder, IconSize.Menu)), false, false, 0);
 			tab.PackStart (new Label (GettextCatalog.GetString (".Net A_ssembly")), true, true, 0);
 			tab.BorderWidth = 3;
 			tab.ShowAll ();
 			mainBook.AppendPage (assemblyRefPanel, tab);
-			
+
 			mainBook.Page = 0;
-			
+
 			var w = selectedHeader.Child;
 			selectedHeader.Remove (w);
 			HeaderBox header = new HeaderBox (1, 0, 1, 1);
@@ -246,14 +249,14 @@ namespace MonoDevelop.Ide.Projects
 			header.GradientBackground = true;
 			header.Add (w);
 			selectedHeader.Add (header);
-			
+
 			RemoveReferenceButton.CanFocus = true;
 			ReferencesTreeView.Selection.Changed += new EventHandler (OnChanged);
 			Child.ShowAll ();
 			OnChanged (null, null);
 			InsertFilterEntry ();
 		}
-		
+
 		void InsertFilterEntry ()
 		{
 			filterEntry.Activated += HandleFilterEntryActivated;
@@ -273,7 +276,7 @@ namespace MonoDevelop.Ide.Projects
 		{
 			base.OnShown ();
 		}
-		
+
 		protected override bool OnKeyPressEvent (Gdk.EventKey evnt)
 		{
 			bool complete;
@@ -293,7 +296,7 @@ namespace MonoDevelop.Ide.Projects
 			else
 				RemoveReferenceButton.Sensitive = false;
 		}
-		
+
 		string GetTypeText (ProjectReference pref)
 		{
 			switch (pref.ReferenceType) {
@@ -311,18 +314,18 @@ namespace MonoDevelop.Ide.Projects
 				return;
 			refTreeStore.Remove (ref iter);
 		}
-		
+
 		public void AddReference (ProjectReference pref)
 		{
 			TreeIter iter = FindReference (pref.ReferenceType, pref.Reference);
 			if (!iter.Equals (TreeIter.Zero))
 				return;
-			
+
 			TreeIter ni = AppendReference (pref);
 			if (!ni.Equals (TreeIter.Zero))
 				ReferencesTreeView.ScrollToCell (refTreeStore.GetPath (ni), null, false, 0, 0);
 		}
-		
+
 		TreeIter FindReference (ReferenceType referenceType, string reference)
 		{
 			TreeIter looping_iter;
@@ -336,7 +339,7 @@ namespace MonoDevelop.Ide.Projects
 			}
 			return TreeIter.Zero;
 		}
-		
+
 		protected void RemoveReference (object sender, EventArgs e)
 		{
 			TreeIter iter;
@@ -371,7 +374,7 @@ namespace MonoDevelop.Ide.Projects
 		{
 			Respond (ResponseType.Ok);
 		}
-		
+
 		public void RegisterFileReference (FilePath file, FilePath solutionFile = default (FilePath))
 		{
 			LoadRecentFiles ();
@@ -391,7 +394,7 @@ namespace MonoDevelop.Ide.Projects
 			if (files.Count > RecentFileListSize)
 				files.RemoveAt (0);
 		}
-		
+
 		public IEnumerable<FilePath> GetRecentFileReferences (FilePath solutionFile = default(FilePath))
 		{
 			LoadRecentFiles ();
@@ -403,12 +406,12 @@ namespace MonoDevelop.Ide.Projects
 				result = result != null ? result.Concat (list) : list;
 			return result ?? new FilePath[0];
 		}
-		
+
 		void LoadRecentFiles ()
 		{
 			if (recentFiles != null)
 				return;
-			
+
 			recentFilesModified = false;
 			recentFiles = new Dictionary<FilePath, List<FilePath>> ();
 
@@ -432,7 +435,7 @@ namespace MonoDevelop.Ide.Projects
 				}
 			}
 		}
-		
+
 		void SaveRecentFiles ()
 		{
 			if (!recentFilesModified)
@@ -465,14 +468,14 @@ namespace MonoDevelop.Ide.Projects
 			foreach (var f in existing)
 				sw.WriteLine (f);
 		}
-		
+
 		protected override void OnHidden ()
 		{
 			base.OnHidden ();
 			SaveRecentFiles ();
 			recentFiles = null;
 		}
-		
+
 		protected override void OnDestroyed ()
 		{
 			base.OnDestroyed ();
@@ -483,10 +486,10 @@ namespace MonoDevelop.Ide.Projects
 
 	class CombinedBox: Gtk.EventBox
 	{
-		SearchEntry filterEntry;
+		MonoDevelop.Components.SearchEntry filterEntry;
 		KeyboardShortcut searchShortcut;
 
-		public SearchEntry FilterEntry {
+		public MonoDevelop.Components.SearchEntry FilterEntry {
 			get { return filterEntry; }
 		}
 
@@ -545,7 +548,7 @@ namespace MonoDevelop.Ide.Projects
 			requisition.Width += entryRequest.Width;
 			requisition.Height = Math.Max (requisition.Height, entryRequest.Height);
 		}
-		
+
 		void RepositionFilter ()
 		{
 			var req = filterEntry.SizeRequest ();

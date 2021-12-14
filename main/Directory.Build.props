@@ -8,7 +8,8 @@
     <VSEditorCoreDirectory Condition="'$(VSEditorCoreDirectory)' == ''">$(MdAddinsDirectory)external\vs-editor-core\</VSEditorCoreDirectory>
     <VSEditorApiDirectory Condition="'$(VSEditorApiDirectory)' == ''">$(MSBuildThisFileDirectory)external\vs-editor-api\</VSEditorApiDirectory>
     <ReferencesVSEditor Condition=" '$(OS)' == 'Windows_NT' ">$(RootDirectory)\msbuild\ReferencesVSEditor.Windows.props</ReferencesVSEditor>
-    <ReferencesVSEditor Condition=" '$(OS)' != 'Windows_NT' ">$(RootDirectory)\msbuild\ReferencesVSEditor.Mac.props</ReferencesVSEditor>
+    <ReferencesVSEditor Condition=" '$(OS)' == 'MAC' ">$(RootDirectory)\msbuild\ReferencesVSEditor.Mac.props</ReferencesVSEditor>
+    <ReferencesVSEditor Condition=" '$(OS)' == 'UNIX' ">$(RootDirectory)\msbuild\ReferencesVSEditor.Gtk.props</ReferencesVSEditor>
     <ReferencesGtk>$(RootDirectory)\msbuild\ReferencesGtk.props</ReferencesGtk>
     <NuGetVersionAllocationAnalyzer>1.0.0.9</NuGetVersionAllocationAnalyzer>
     <NuGetVersionCecil>0.10.1</NuGetVersionCecil>
@@ -22,6 +23,6 @@
     <NuGetVersionNUnit3>3.9.0</NuGetVersionNUnit3>
     <NuGetVersionVSCodeDebugProtocol>15.8.20719.1</NuGetVersionVSCodeDebugProtocol>
     <NuGetVersionVSComposition>15.8.112</NuGetVersionVSComposition>
-    <NuGetVersionVSEditor>16.1.28-g2ad4df7366</NuGetVersionVSEditor>
+    <NuGetVersionVSEditor>16.4.280</NuGetVersionVSEditor>
   </PropertyGroup>
 </Project>

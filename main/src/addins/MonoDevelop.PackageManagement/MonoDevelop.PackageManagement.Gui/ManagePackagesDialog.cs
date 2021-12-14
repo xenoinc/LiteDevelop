@@ -132,9 +132,13 @@ namespace MonoDevelop.PackageManagement
 							box.Child.Accessible.SetShouldIgnore (true);
 						}
 						var tab = child.Accessible;
+#if DD_Mac_TODO
+
 						tab.SetRole (AtkCocoa.Roles.AXRadioButton);
 						tab.SetSubRole (AtkCocoa.SubRoles.AXTabButton);
 						tab.SetValue (false);
+#endif
+
 						tabs.Add (tab);
 					}
 					a11yGroup.Accessible.SetTabs (tabs.ToArray ());
@@ -205,7 +209,7 @@ namespace MonoDevelop.PackageManagement
 			packagesListView.DataSource = packageStore;
 
 			AddCellViewsToListView ();
-						
+
 			packagesListView.SelectionChanged += PackagesListViewSelectionChanged;
 			packagesListView.RowActivated += PackagesListRowActivated;
 			packagesListView.VerticalScrollControl.ValueChanged += PackagesListViewScrollValueChanged;
@@ -440,7 +444,7 @@ namespace MonoDevelop.PackageManagement
 				viewModel.SelectedPackageSource = selectedPackageSource;
 			}
 		}
-		
+
 		void PackagesListViewSelectionChanged (object sender, EventArgs e)
 		{
 			try {
@@ -1173,7 +1177,9 @@ namespace MonoDevelop.PackageManagement
 			if (label.Surface.ToolkitEngine.Type == ToolkitType.Gtk) {
 				var widget = label.Surface.NativeWidget as Gtk.Widget;
 				if (widget != null) {
+#if DD_Mac_TODO
 					widget.Accessible.SetValue (active);
+#endif
 					// FIXME: Accessible.SetValue has no effect, so set the role description instead
 					widget.Accessible.SetRole (AtkCocoa.Roles.AXRadioButton, active ? "selected tab" : "tab");
 				}

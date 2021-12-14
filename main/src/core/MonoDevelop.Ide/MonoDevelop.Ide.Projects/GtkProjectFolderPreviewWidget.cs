@@ -33,6 +33,9 @@ using MonoDevelop.Core;
 using MonoDevelop.Components.AutoTest;
 using MonoDevelop.Ide.Gui;
 using System.ComponentModel;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects
 {

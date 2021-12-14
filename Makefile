@@ -1,8 +1,8 @@
 include main/monodevelop_version
 
 EXTRA_DIST = configure code_of_conduct.md
-SPACE := 
-SPACE +=  
+SPACE :=
+SPACE +=
 
 ifeq ($(origin APP), undefined)
 BIN_DIR=main/build
@@ -110,7 +110,7 @@ dist: update_submodules remove-stale-tarballs remove-stale-buildinfo dist-recurs
 		echo Decompressing $$tb; \
 		tar xvjf external/$$tb; \
 	done
-	@rm -rf tarballs/external	
+	@rm -rf tarballs/external
 	@echo Decompressing monodevelop-$(PACKAGE_VERSION).tar.bz2
 	@cd tarballs && tar xvjf monodevelop-$(PACKAGE_VERSION).tar.bz2
 	@cp version.config tarballs/monodevelop-$(PACKAGE_VERSION)
@@ -165,7 +165,7 @@ run-no-accessibility:
 	cd main && $(MAKE) run-no-accessibility
 test:
 	cd main && $(MAKE) test assembly=$(assembly)
-    
+
 deploy-tests:
 	cd main && $(MAKE) deploy-tests
 

@@ -13,7 +13,8 @@ namespace Microsoft.VisualStudio.Text.Editor.Implementation
     using Microsoft.VisualStudio.Text.Utilities;
     using Microsoft.VisualStudio.Utilities;
 
-    //[Export(typeof(ISmartIndentationService))]
+    // oe NOTICE :: this must be exported.
+    [Export(typeof(ISmartIndentationService))]
     internal sealed class SmartIndentationService : ISmartIndentationService, ISmartIndent
     {
         [ImportMany]
@@ -71,12 +72,12 @@ namespace Microsoft.VisualStudio.Text.Editor.Implementation
             else
                 return GuardedOperations.InvokeBestMatchingFactory
                                             (SmartIndentProviders, textView.TextDataModel.ContentType,
-                                             (provider) => (provider.CreateSmartIndent(textView)), ContentTypeRegistryService, this) 
+                                             (provider) => (provider.CreateSmartIndent(textView)), ContentTypeRegistryService, this)
                        ?? this;
         }
 
         /// <summary>
-        /// This is the vacuous implementation for ContentTypes that have no provided ISmartIndent 
+        /// This is the vacuous implementation for ContentTypes that have no provided ISmartIndent
         /// </summary>
         public int? GetDesiredIndentation(ITextSnapshotLine line)
         {

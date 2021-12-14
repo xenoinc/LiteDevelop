@@ -55,6 +55,7 @@ namespace MonoDevelop.Debugger
 
 		public bool ExecuteCommand (EscapeKeyCommandArgs args, CommandExecutionContext executionContext)
 		{
+#if DD_Mac_TODO
 			var cocoaTextView = (ICocoaTextView) args.TextView;
 			var bgView = cocoaTextView.VisualElement.Superview; // the NSView that draws the background color
 			var superview = bgView?.Superview;
@@ -63,7 +64,7 @@ namespace MonoDevelop.Debugger
 				nameView.CancelEdit ();
 			else
 				System.Console.WriteLine ("superview is {0}", superview.GetType ().FullName);
-
+#endif
 			return true;
 		}
 
@@ -78,10 +79,11 @@ namespace MonoDevelop.Debugger
 
 		public bool ExecuteCommand (ReturnKeyCommandArgs args, CommandExecutionContext executionContext)
 		{
+#if DD_Mac_TODO
 			var cocoaTextView = (ICocoaTextView) args.TextView;
 
 			cocoaTextView.VisualElement.ResignFirstResponder ();
-
+#endif
 			return true;
 		}
 
@@ -96,10 +98,11 @@ namespace MonoDevelop.Debugger
 
 		public bool ExecuteCommand (TabKeyCommandArgs args, CommandExecutionContext executionContext)
 		{
+#if DD_Mac_TODO
 			var cocoaTextView = (ICocoaTextView) args.TextView;
 
 			cocoaTextView.VisualElement.ResignFirstResponder ();
-
+#endif
 			return true;
 		}
 

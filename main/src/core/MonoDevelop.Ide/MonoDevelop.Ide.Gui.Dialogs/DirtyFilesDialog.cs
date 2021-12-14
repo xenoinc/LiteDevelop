@@ -9,6 +9,9 @@ using MonoDevelop.Ide.Gui;
 using MonoDevelop.Components;
 using MonoDevelop.Components.AtkCocoaHelper;
 using System.Threading.Tasks;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Gui.Dialogs
 {
@@ -50,7 +53,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			foreach (Document doc in docs) {
 				if (!doc.IsDirty)
 					continue;
-				
+
 				if (groupByProject && doc.Owner != null) {
 					TreeIter projIter = TreeIter.Zero;
 					if (projectIters.ContainsKey (doc.Owner))
@@ -70,18 +73,18 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			}
 			if (!topCombineIter.Equals (TreeIter.Zero)) {
 				if (!tsFiles.IterHasChild (topCombineIter))
-					tsFiles.Remove (ref topCombineIter); 
+					tsFiles.Remove (ref topCombineIter);
 			}
 
 			TreeViewColumn mainColumn = new TreeViewColumn ();
 			mainColumn.Title = "header";
-			
+
 			togRender = new CellRendererToggle ();
 			togRender.Toggled += toggled;
 			mainColumn.PackStart (togRender, false);
 			mainColumn.AddAttribute (togRender, "active", 1);
 			mainColumn.AddAttribute (togRender, "inconsistent", 3);
-			
+
 			textRender = new CellRendererText ();
 			mainColumn.PackStart (textRender, true);
 			mainColumn.AddAttribute (textRender, "text", 0);
@@ -153,7 +156,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			}
 			base.OnDestroyed ();
 		}
-		
+
 		async void SaveAndQuit (object o, EventArgs e)
 		{
 			Sensitive = false;
@@ -173,7 +176,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			} finally {
 				Sensitive = true;
 			}
-	
+
 			Respond (Gtk.ResponseType.Ok);
 			Hide ();
 		}
@@ -198,7 +201,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			tsFiles.SetValue (iter, 1, newsetting);
 			if (tsFiles.IterHasChild (iter))
 				ToggleChildren (iter, newsetting);
-			
+
 			TreeIter iterFirst;
 			tsFiles.GetIterFirst (out iterFirst);
 			if (tsFiles.IterHasChild (iterFirst))
@@ -226,7 +229,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 						anytrue = true;
 					lastsetting = newsetting;
 				}
-				
+
 				tsFiles.SetValue (iter, 3, inconsistant);
 				tsFiles.SetValue (iter, 1, anytrue);
 			}

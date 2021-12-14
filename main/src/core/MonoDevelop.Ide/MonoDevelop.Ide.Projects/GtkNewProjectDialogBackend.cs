@@ -38,6 +38,9 @@ using MonoDevelop.Core;
 using System.Threading.Tasks;
 using MonoDevelop.Ide.Projects;
 using System.Collections.Generic;
+#if GTK3
+ using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects
 {
@@ -656,7 +659,7 @@ namespace MonoDevelop.Ide.Projects
 
 		void FocusWidget (Widget widget)
 		{
-			var widgetToFocus = widget; 
+			var widgetToFocus = widget;
 			var commandRouter = widget as CommandRouterContainer;
 			if ((commandRouter != null) && commandRouter.Children.Any ()) {
 				widgetToFocus = commandRouter.Children [0];
@@ -667,7 +670,7 @@ namespace MonoDevelop.Ide.Projects
 
 		void TreeViewRowActivated (object o, RowActivatedArgs args)
 		{
-			if (CanMoveToNextPage && !isLastPressedKeySpace && 
+			if (CanMoveToNextPage && !isLastPressedKeySpace &&
 			    IsSolutionTemplateOnActivatedRow ((Gtk.TreeView)o, args))
 				MoveToNextPage ().Ignore();
 			isLastPressedKeySpace = false;

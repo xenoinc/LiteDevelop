@@ -243,7 +243,13 @@ namespace MonoDevelop.Ide.Composition
 						continue;
 
 					if (!loadedMap.TryGetValue (assemblyName, out var assembly)) {
+#if DD_VS_API_TODO
 						throw new InvalidRuntimeCompositionException (assemblyName);
+#else
+						LoggingService.LogError ("Invalid runtime composition", new InvalidRuntimeCompositionException (assemblyName));
+						continue;
+#endif
+
 					}
 
 					additionalInputAssemblies.Add (new MefControlCacheAssemblyInfo {

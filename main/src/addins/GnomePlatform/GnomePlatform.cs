@@ -6,7 +6,7 @@
 //   Matthias Gliwka <hello@gliwka.eu>
 //
 // Copyright (C) 2007 Novell, Inc (http://www.novell.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
 // "Software"), to deal in the Software without restriction, including
@@ -14,10 +14,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -32,6 +32,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using MonoDevelop.Core.Execution;
 using MonoDevelop.Core;
 
@@ -42,7 +43,7 @@ namespace MonoDevelop.Platform
 		static GnomePlatform ()
 		{
 		}
-		
+
 		public override IEnumerable<DesktopApplication> GetApplications (string filename)
 		{
 			var mimeType = GetMimeTypeForUri (filename);
@@ -53,7 +54,7 @@ namespace MonoDevelop.Platform
 		{
 			return Gio.GetAllForType (mimeType);
 		}
-		
+
 		struct GnomeVfsApp {
 			#pragma warning disable 649 // never assigned
 			public string Id, DisplayName, Command;
@@ -69,7 +70,7 @@ namespace MonoDevelop.Platform
 		{
 			if (uri == null)
 				return null;
-			
+
 			return Gio.GetMimeTypeForUri (uri);
 		}
 
@@ -77,7 +78,7 @@ namespace MonoDevelop.Platform
 		{
 			Runtime.ProcessService.StartProcess ("xdg-open", url, null, null);
 		}
-		
+
 		public override string DefaultMonospaceFont {
 			get {
 				try {
@@ -87,7 +88,7 @@ namespace MonoDevelop.Platform
 				}
 			}
 		}
-		
+
 		public override string Name {
 			get { return "Gnome"; }
 		}
@@ -96,31 +97,31 @@ namespace MonoDevelop.Platform
 		{
 			if (filename == "Documentation") {
 				return "gnome-fs-regular";
-			} 
+			}
 			if (System.IO.Directory.Exists (filename)) {
 				return "gnome-fs-directory";
 			} else if (System.IO.File.Exists (filename)) {
 				filename = EscapeFileName (filename);
 				if (filename == null)
 					return "gnome-fs-regular";
-				
+
 				string icon = null;
 				try {
 					icon = Gio.GetIconIdForFile (filename);
 				} catch {}
 				if (icon != null && icon.Length > 0)
 					return icon;
-			}			
+			}
 			return "gnome-fs-regular";
-			
+
 		}
-		
+
 		protected override Xwt.Drawing.Image OnGetIconForFile (string filename)
 		{
 			string icon = OnGetIconIdForFile (filename);
 			return GetIconForType (icon);
 		}
-		
+
 		string EscapeFileName (string filename)
 		{
 			foreach (char c in filename) {
@@ -131,7 +132,7 @@ namespace MonoDevelop.Platform
 			}
 			return ConvertFileNameToVFS (filename);
 		}
-		
+
 		static string ConvertFileNameToVFS (string fileName)
 		{
 			string result = fileName;
@@ -140,8 +141,8 @@ namespace MonoDevelop.Platform
 			result = result.Replace ("?", "%3F");
 			return result;
 		}
-		
-		
+
+
 		delegate string TerminalRunnerHandler (string command, string args, string dir, string title, bool pause, Guid applicationId);
 		delegate string TerminalOpenFolderRunnerHandler (string dir);
 
@@ -149,15 +150,22 @@ namespace MonoDevelop.Platform
 		bool terminal_probed;
 		TerminalRunnerHandler runner;
 		TerminalOpenFolderRunnerHandler openDirectoryRunner;
-		
+
+		private static string _gts_command;
+
+		private static string GtsCommand => _gts_command ??
+		                                    (_gts_command = new[] {"/usr/libexec", "/usr/lib/gnome-terminal"}
+			                                    .Select (c=>Path.Combine (c,"gnome-terminal-server"))
+			                                    .FirstOrDefault (File.Exists));
+
 		public override ProcessAsyncOperation StartConsoleProcess (string command, string arguments, string workingDirectory,
-		                                                            IDictionary<string, string> environmentVariables, 
+		                                                            IDictionary<string, string> environmentVariables,
 		                                                            string title, bool pauseWhenFinished)
 		{
 			ProbeTerminal ();
-			
+
 			//generate unique guid to derive application id for gnome terminal server
-			var consoleGuid = Guid.NewGuid (); 
+			var consoleGuid = Guid.NewGuid ();
 
 			string exec = runner (command, arguments, workingDirectory, title, pauseWhenFinished, consoleGuid);
 
@@ -169,11 +177,11 @@ namespace MonoDevelop.Platform
 				foreach (var env in environmentVariables)
 					psi.EnvironmentVariables [env.Key] = env.Value;
 			}
-			
+
 			ProcessWrapper proc = new ProcessWrapper ();
 			if (terminal_command.Contains ("gnome-terminal")) {
 				var parameter = String.Format ("--app-id {0}", GenerateAppId (consoleGuid));
-				var terminalProcessStartInfo = new ProcessStartInfo ("/usr/lib/gnome-terminal/gnome-terminal-server", parameter) {
+				var terminalProcessStartInfo = new ProcessStartInfo(GtsCommand, parameter) {
 					CreateNoWindow = true,
 					UseShellExecute = false,
 				};
@@ -188,15 +196,15 @@ namespace MonoDevelop.Platform
 			}
 			return proc.ProcessAsyncOperation;
 		}
-		
+
 #region Terminal runner implementations
-		
+
 		private static string GnomeTerminalRunner (string command, string args, string dir, string title, bool pause, Guid applicationId)
 		{
-			string extra_commands = pause 
+			string extra_commands = pause
 				? BashPause.Replace ("'", "\\\"")
 				: String.Empty;
-			
+
 			return String.Format (@" --app-id {5} --name ""{4}"" -e ""bash -c 'cd {3} ; {0} {1} ; {2}'""",
 				command,
 				EscapeArgs (args),
@@ -205,13 +213,13 @@ namespace MonoDevelop.Platform
 				title,
 				GenerateAppId (applicationId));
 		}
-		
+
 		private static string MateTerminalRunner (string command, string args, string dir, string title, bool pause, Guid applicationId)
 		{
-			string extra_commands = pause 
+			string extra_commands = pause
 				? BashPause.Replace ("'", "\\\"")
 				: String.Empty;
-			
+
 			return String.Format (@"--name ""{4}"" -e ""bash -c 'cd {3} ; {0} {1} ; {2}'""",
 				command,
 				EscapeArgs (args),
@@ -224,13 +232,13 @@ namespace MonoDevelop.Platform
  		{
 			return String.Format("mono.develop.id{0}", applicationId.ToString ().Replace ("-", ""));
  		}
-		
+
 		private static string XtermRunner (string command, string args, string dir, string title, bool pause, Guid applicationId)
 		{
-			string extra_commands = pause 
+			string extra_commands = pause
 				? BashPause
 				: String.Empty;
-			
+
 			return String.Format (@" -title ""{4}"" -e bash -c ""cd {3} ; '""{0}""' {1} ; {2}""",
 				command,
 				EscapeArgs (args),
@@ -238,13 +246,13 @@ namespace MonoDevelop.Platform
 				EscapeDir (dir),
 				title);
 		}
-		
+
 		private static string Xfce4TerminalRunner (string command, string args, string dir, string title, bool pause, Guid applicationId)
 		{
-			string extra_commands = pause 
+			string extra_commands = pause
 				? BashPause
 				: String.Empty;
-			
+
 			return String.Format (@" -T ""{4}"" --working-directory=""{3}"" -x bash -c ""'{0}' {1} ; {2}""",
 				command,
 				EscapeArgs (args),
@@ -255,7 +263,7 @@ namespace MonoDevelop.Platform
 
 		private static string KdeTerminalRunner (string command, string args, string dir, string title, bool pause, Guid applicationId)
 		{
-			string extra_commands = pause 
+			string extra_commands = pause
 				? BashPause.Replace ("'", "\"")
 					: String.Empty;
 
@@ -286,12 +294,12 @@ namespace MonoDevelop.Platform
 		{
 			return args.Replace ("\\", "\\\\").Replace ("\"", "\\\"");
 		}
-		
+
 		private static string EscapeDir (string dir)
 		{
 			return dir.Replace (" ", "\\ ").Replace (";", "\\;");
 		}
-		
+
 		private static string BashPause {
 			get { return @"echo; read -p 'Press any key to continue...' -n1;"; }
 		}
@@ -305,9 +313,9 @@ namespace MonoDevelop.Platform
 			if (terminal_probed) {
 				return;
 			}
-			
+
 			terminal_probed = true;
-			
+
 			string fallback_terminal = PropertyService.Get ("MonoDevelop.Shell", "xterm");
 			string preferred_terminal;
 			TerminalRunnerHandler preferred_runner = null;
@@ -325,8 +333,8 @@ namespace MonoDevelop.Platform
 				preferred_terminal = "mate-terminal";
 				preferred_runner = MateTerminalRunner;
 				preferedOpenFolderRunner = GnomeTerminalOpenFolderRunner;
-			} 
-			else if (!String.IsNullOrEmpty (Environment.GetEnvironmentVariable ("KDE_SESSION_VERSION"))) { 
+			}
+			else if (!String.IsNullOrEmpty (Environment.GetEnvironmentVariable ("KDE_SESSION_VERSION"))) {
 				preferred_terminal = "konsole";
 				preferred_runner = KdeTerminalRunner;
 				preferedOpenFolderRunner = KdeTerminalOpenFolderRunner;
@@ -335,7 +343,7 @@ namespace MonoDevelop.Platform
 				preferred_terminal = "xfce4-terminal";
 				preferred_runner = Xfce4TerminalRunner;
 				preferedOpenFolderRunner = Xfce4TerminalOpenFolderRunner;
-			} 
+			}
 			else {
 				preferred_terminal = fallback_terminal;
 				preferred_runner = fallback_runner;
@@ -348,7 +356,7 @@ namespace MonoDevelop.Platform
 				openDirectoryRunner = preferedOpenFolderRunner;
 				return;
 			}
-			
+
 			terminal_command = FindExec (fallback_terminal);
 			runner = fallback_runner;
 			openDirectoryRunner = fallbackOpenFolderRunner;
@@ -383,7 +391,7 @@ namespace MonoDevelop.Platform
 		}
 
 #endregion
-				
+
 		public override bool CanOpenTerminal {
 			get {
 				return true;
@@ -396,17 +404,17 @@ namespace MonoDevelop.Platform
 			Runtime.ProcessService.StartProcess (terminal_command, openDirectoryRunner(directory), directory, null);
 		}
 	}
-	
+
 	class GnomeDesktopApplication : DesktopApplication
 	{
 		public GnomeDesktopApplication (string command, string displayName, bool isDefault) : base (command, displayName, isDefault)
 		{
 		}
-		
+
 		string Command {
 			get { return Id; }
 		}
-		
+
 		public override void Launch (params string[] files)
 		{
 			// TODO: implement all other cases

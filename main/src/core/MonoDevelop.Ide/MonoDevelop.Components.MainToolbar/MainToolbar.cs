@@ -1,21 +1,21 @@
-﻿// 
+﻿//
 // MainToolbar.cs
-//  
+//
 // Author:
 //       Mike Krüger <mkrueger@xamarin.com>
-// 
+//
 // Copyright (c) 2012 Xamarin Inc. (http://xamarin.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,6 +46,9 @@ using MonoDevelop.Ide.Editor;
 using System.Text;
 using MonoDevelop.Components.AtkCocoaHelper;
 using System.Diagnostics;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Components.MainToolbar
 {
@@ -60,7 +63,7 @@ namespace MonoDevelop.Components.MainToolbar
 
 		ComboBox runConfigurationCombo;
 		TreeStore runConfigurationStore = new TreeStore (typeof (string), typeof (IRunConfigurationModel));
-	
+
 		ComboBox runtimeCombo;
 		TreeStore runtimeStore = new TreeStore (typeof(IRuntimeModel));
 
@@ -149,7 +152,7 @@ namespace MonoDevelop.Components.MainToolbar
 			var runConfigurationComboVBox = new VBox ();
 			runConfigurationComboVBox.PackStart (runConfigurationCombo, true, false, 0);
 			configurationCombosBox.PackStart (runConfigurationComboVBox, false, false, 0);
-		
+
 			configurationCombo = new Gtk.ComboBox ();
 			configurationCombo.Model = configurationStore;
 			configurationCombo.PackStart (ctx, true);

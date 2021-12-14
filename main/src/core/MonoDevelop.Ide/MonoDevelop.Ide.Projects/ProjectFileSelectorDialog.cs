@@ -1,21 +1,21 @@
-﻿// 
+﻿//
 // ProjectFileSelectorDialog.cs
-//  
+//
 // Author:
 //       Michael Hutchinson <mhutchinson@novell.com>
-// 
+//
 // Copyright (c) 2009 Novell, Inc. (http://www.novell.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,6 +33,9 @@ using MonoDevelop.Core;
 using MonoDevelop.Projects;
 using MonoDevelop.Components.Extensions;
 using MonoDevelop.Components;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects
 {
@@ -44,11 +47,11 @@ namespace MonoDevelop.Ide.Projects
 		Project project;
 		TreeStore dirStore = new TreeStore (typeof (string), typeof (FilePath));
 		ListStore fileStore = new ListStore (typeof (ProjectFile), typeof (Xwt.Drawing.Image));
-		
+
 		// NOTE: these should not be disposed, since they come from the icon scheme, and must instead be unref'd
 		// and the only way to unref is to let the finalizer handle it.
 		Xwt.Drawing.Image projBuf, dirOpenBuf, dirClosedBuf;
-		
+
 		public ProjectFileSelectorDialog (Project project)
 			: this (project, GettextCatalog.GetString ("All files"), "*")
 		{
@@ -64,13 +67,13 @@ namespace MonoDevelop.Ide.Projects
 			this.project = project;
 			this.defaultFilter = new SelectFileDialogFilter (defaultFilterName, defaultFilterPattern ?? "*");
 			this.buildActions = buildActions;
-			
+
 			this.Build();
-			
+
 			projBuf = ImageService.GetIcon (project.StockIcon, IconSize.Menu);
 			dirClosedBuf = ImageService.GetIcon (MonoDevelop.Ide.Gui.Stock.ClosedFolder, IconSize.Menu);
 			dirOpenBuf = ImageService.GetIcon (MonoDevelop.Ide.Gui.Stock.OpenFolder, IconSize.Menu);
-			
+
 			TreeViewColumn projectCol = new TreeViewColumn ();
 			projectCol.Title = GettextCatalog.GetString ("Project Folders");
 			var pixRenderer = new CellRendererImage ();
@@ -88,7 +91,7 @@ namespace MonoDevelop.Ide.Projects
 				fileList.GrabFocus ();
 			};
 			projectTree.KeyPressEvent += ProjectListKeyPressEvent;
-			
+
 			TreeViewColumn fileCol = new TreeViewColumn ();
 			var filePixRenderer = new CellRendererImage ();
 			fileCol.Title = GettextCatalog.GetString ("Files");
@@ -105,17 +108,17 @@ namespace MonoDevelop.Ide.Projects
 			};
 			fileList.KeyPressEvent += FileListKeyPressEvent;
 			fileList.KeyReleaseEvent += FileListKeyReleaseEvent;
-			
+
 			TreeIter root;
 			if (dirStore.GetIterFirst (out root))
 				projectTree.Selection.SelectIter (root);
-			
+
 			UpdateFileList (null, null);
-			
+
 			projectTree.Selection.Changed += UpdateFileList;
 			fileList.Selection.Changed += UpdateSensitivity;
-			
-			
+
+
 			this.DefaultResponse = ResponseType.Cancel;
 			this.Modal = true;
 		}
@@ -127,9 +130,9 @@ namespace MonoDevelop.Ide.Projects
 				args.RetVal = true;
 			}
 		}
-		
+
 		const Gdk.ModifierType modifiers =
-			Gdk.ModifierType.ControlMask | 
+			Gdk.ModifierType.ControlMask |
 			Gdk.ModifierType.ShiftMask |
 			Gdk.ModifierType.Mod1Mask |
 			Gdk.ModifierType.SuperMask |
@@ -145,7 +148,7 @@ namespace MonoDevelop.Ide.Projects
 				projectTree.GrabFocus ();
 			}
 		}
-		
+
 		[GLib.ConnectBefore]
 		void ProjectListKeyPressEvent (object o, KeyPressEventArgs args)
 		{
@@ -154,7 +157,7 @@ namespace MonoDevelop.Ide.Projects
 				fileList.GrabFocus ();
 			}
 		}
-		
+
 		void InitDirs (TreeIter root)
 		{
 			//iters in TreeStore should remain valid as long as we only add nodes
@@ -168,28 +171,28 @@ namespace MonoDevelop.Ide.Projects
 				InitDir (root, iters, dirname);
 			}
 		}
-		
+
 		TreeIter InitDir (TreeIter root, Dictionary<string,TreeIter> iters, FilePath dir)
 		{
 			if (dir.IsNullOrEmpty)
 				return root;
-			
+
 			TreeIter value;
 			if (iters.TryGetValue (dir, out value))
 				return value;
-			
+
 			TreeIter parent = InitDir (root, iters, dir.ParentDirectory);
 			value = dirStore.AppendValues (parent, dir.FileName, dir);
 			iters.Add (dir, value);
-			
+
 			return value;
 		}
-		
+
 		void PixDataFunc (TreeViewColumn tree_column, CellRenderer cell, TreeModel tree_model, TreeIter iter)
 		{
 			var pixRenderer = (CellRendererImage) cell;
 			string dirname = (string) tree_model.GetValue (iter, 0);
-			
+
 			if (dirname.Length == 0) {
 				pixRenderer.ImageExpanderOpen = projBuf;
 				pixRenderer.ImageExpanderClosed = projBuf;
@@ -200,7 +203,7 @@ namespace MonoDevelop.Ide.Projects
 			pixRenderer.ImageExpanderClosed = dirClosedBuf;
 			pixRenderer.Image = dirClosedBuf;
 		}
-		
+
 		void TxtDataFunc (TreeViewColumn tree_column, CellRenderer cell, TreeModel tree_model, TreeIter iter)
 		{
 			CellRendererText txtRenderer = (CellRendererText) cell;
@@ -209,18 +212,18 @@ namespace MonoDevelop.Ide.Projects
 				txtRenderer.Text = project.Name;
 				return;
 			}
-			
+
 			int lastSlash = dirname.LastIndexOf (System.IO.Path.DirectorySeparatorChar);
-			txtRenderer.Text = lastSlash < 0? dirname : dirname.Substring (lastSlash + 1); 
+			txtRenderer.Text = lastSlash < 0? dirname : dirname.Substring (lastSlash + 1);
 		}
-		
+
 		void TxtFileDataFunc (TreeViewColumn tree_column, CellRenderer cell, TreeModel tree_model, TreeIter iter)
 		{
 			CellRendererText txtRenderer = (CellRendererText) cell;
 			ProjectFile pf = (ProjectFile)tree_model.GetValue (iter, 0);
 			txtRenderer.Text = System.IO.Path.GetFileName (pf.FilePath);
 		}
-		
+
 		public void AddFileFilter (string name, string pattern)
 		{
 			if (filters == null) {
@@ -236,12 +239,12 @@ namespace MonoDevelop.Ide.Projects
 			filters.Add (new SelectFileDialogFilter (name, pattern));
 			fileTypeCombo.AppendText (pattern);
 		}
-		
+
 		/// <summary>
 		/// Remains valid after the dialog has been destroyed
 		/// </summary>
 		public ProjectFile SelectedFile { get; private set; }
-		
+
 		FilePath GetSelectedDirectory ( )
 		{
 			TreeIter iter;
@@ -250,11 +253,11 @@ namespace MonoDevelop.Ide.Projects
 			var dir = (FilePath)dirStore.GetValue (iter, 1);
 			return project.BaseDirectory.Combine (dir);
 		}
-		
+
 		void UpdateFileList (object sender, EventArgs args)
 		{
 			fileStore.Clear ();
-			
+
 			string pattern = defaultFilter.Patterns [0];
 			if (filters != null) {
 				pattern = filters[fileTypeCombo.Active].Patterns [0];
@@ -271,22 +274,22 @@ namespace MonoDevelop.Ide.Projects
 				string pathStr = pf.FilePath.ToString ();
 				if (pf.Subtype == Subtype.Directory || !pathStr.StartsWith (dir))
 					continue;
-				
+
 				int split = pathStr.LastIndexOf (System.IO.Path.DirectorySeparatorChar);
 				if (split != dir.Length)
 					continue;
-				
+
 				if (regex.IsMatch (pf.FilePath.FileName))
 					fileStore.AppendValues (pf, IdeServices.DesktopService.GetIconForFile (pf.FilePath, Gtk.IconSize.Menu));
 			}
-			
+
 			TreeIter root;
 			if (fileStore.GetIterFirst (out root))
 				fileList.Selection.SelectIter (root);
-			
+
 			UpdateSensitivity (null, null);
 		}
-		
+
 		void UpdateSensitivity (object sender, EventArgs args)
 		{
 			TreeIter iter;

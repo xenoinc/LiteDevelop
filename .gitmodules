@@ -1,54 +1,50 @@
 [submodule "main/external/debugger-libs"]
 	path = main/external/debugger-libs
-	url = https://github.com/mono/debugger-libs.git
+	url = git://github.com/dotdevelop/debugger-libs.git
 	branch = master
 [submodule "main/external/guiunit"]
 	path = main/external/guiunit
-	url = https://github.com/mono/guiunit.git
-[submodule "main/external/libgit-binary"]
-	path = main/external/libgit-binary
-	url = https://github.com/mono/libgit-binary.git
-	branch = vs-8.0-v0.26.8
-[submodule "main/external/libgit2"]
-	path = main/external/libgit2
-	url = https://github.com/mono/libgit2.git
-	branch = vs-8.0-v0.26.8
-[submodule "main/external/libgit2sharp"]
-	path = main/external/libgit2sharp
-	url = https://github.com/mono/libgit2sharp.git
-	branch = vs-8.0-v0.26
+	url = git://github.com/dotdevelop/guiunit.git
 [submodule "main/external/macdoc"]
 	path = main/external/macdoc
-	url = https://github.com/xamarin/macdoc
+	url = git://github.com/dotdevelop/macdoc
 [submodule "main/external/mdtestharness"]
 	path = main/external/mdtestharness
-	url = https://github.com/mono/mdtestharness.git
+	url = git://github.com/dotdevelop/mdtestharness.git
 [submodule "main/external/mono-addins"]
 	path = main/external/mono-addins
-	url = https://github.com/mono/mono-addins.git
-	branch = master
+	url = git://github.com/dotdevelop/mono-addins.git
+	branch = dotdevelop_gtksharp
 [submodule "main/external/mono-tools"]
 	path = main/external/mono-tools
-	url = https://github.com/mono/mono-tools.git
+	url = git://github.com/dotdevelop/mono-tools.git
 [submodule "main/external/nrefactory"]
 	path = main/external/nrefactory
-	url = https://github.com/xamarin/NRefactory.git
+	url = git://github.com/dotdevelop/NRefactory.git
 [submodule "main/external/nuget-binary"]
 	path = main/external/nuget-binary
-	url = https://github.com/mono/nuget-binary.git
+	url = git://github.com/dotdevelop/nuget-binary.git
 	branch = master
 [submodule "main/external/sharpsvn-binary"]
 	path = main/external/sharpsvn-binary
-	url = https://github.com/mono/sharpsvn-binary.git
+	url = git://github.com/dotdevelop/sharpsvn-binary.git
 [submodule "main/external/xwt"]
 	path = main/external/xwt
-	url = https://github.com/mono/xwt
-	branch = master
+	url = git://github.com/dotdevelop/xwt
+	branch = dotdevelop
 [submodule "main/external/Xamarin.PropertyEditing"]
 	path = main/external/Xamarin.PropertyEditing
-	url = https://github.com/xamarin/Xamarin.PropertyEditing
+	url = https://github.com/dotdevelop/Xamarin.PropertyEditing
 	branch = master
 [submodule "main/external/vs-editor-api"]
 	path = main/external/vs-editor-api
-	url = https://github.com/microsoft/vs-editor-api.git
-	branch = master
+	url = https://github.com/dotdevelop/vs-editor-api.git
+    branch = dotdevelop_oe_8.1.5
+[submodule "main/external/Monodevelop.Netcoredbg"]
+	path = main/external/Monodevelop.Netcoredbg
+	url = git://github.com/dotdevelop/monodevelop.netcoredbg.git
+	branch = dotdevelop
+[submodule "main/external/Samsung.Netcoredbg"]
+	path = main/external/Samsung.Netcoredbg
+	url = git://github.com/dotdevelop/netcoredbg.git
+	branch = dotdevelop

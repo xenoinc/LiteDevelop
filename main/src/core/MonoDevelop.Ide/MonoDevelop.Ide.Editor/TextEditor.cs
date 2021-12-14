@@ -285,7 +285,7 @@ namespace MonoDevelop.Ide.Editor
 				textEditorImpl.SelectionRegion = value;
 			}
 		}
-		
+
 		public int SelectionAnchorOffset {
 			get {
 				return textEditorImpl.SelectionAnchorOffset;
@@ -741,7 +741,7 @@ namespace MonoDevelop.Ide.Editor
 
 			if (offset + length < 0 || offset  + length > Length)
 				throw new ArgumentOutOfRangeException (nameof (length), "needs to be 0 <= offset + length (" + length + ") < Length=" + this.Length);
-			
+
 			return textEditorImpl.GetTextSegmentMarkersAt (new TextSegment (offset, length));
 		}
 
@@ -895,7 +895,7 @@ namespace MonoDevelop.Ide.Editor
 		/// <inheritdoc/>
 		public void CopyTo (int sourceIndex, char [] destination, int destinationIndex, int count)
 		{
-			ReadOnlyTextDocument.CopyTo (sourceIndex, destination, destinationIndex, count); 
+			ReadOnlyTextDocument.CopyTo (sourceIndex, destination, destinationIndex, count);
 		}
 
 		public void ScrollTo (int offset)
@@ -1017,7 +1017,7 @@ namespace MonoDevelop.Ide.Editor
 			get {
 				return textEditorImpl.EditorExtension;
 			}
-		} 
+		}
 
 		internal ITextMarkerFactory TextMarkerFactory {
 			get {
@@ -1059,7 +1059,9 @@ namespace MonoDevelop.Ide.Editor
 
 			TextEditor_MimeTypeChanged (null, null);
 
-			this.TextView = CompositionManager.Instance.GetExportedValue<ITextEditorInitializationService> ().CreateTextView (this);
+		// oe NOTICE old-editor instance creation...
+		//oe	this.TextView = CompositionManager.Instance.GetExportedValue<ITextEditorInitializationService> ().CreateTextView (this);
+			this.TextView = Microsoft.VisualStudio.Platform.PlatformCatalog.Instance.TextEditorFactoryService.CreateTextView(this);
 		}
 
 		void TextEditor_ZoomLevelChanged (object sender, EventArgs e)
@@ -1198,7 +1200,7 @@ namespace MonoDevelop.Ide.Editor
 				throw new ArgumentNullException (nameof (documentContext));
 			if (extensions == null)
 				throw new ArgumentNullException (nameof (extensions));
-			
+
 			TextEditorExtension last = null;
 			foreach (var ext in extensions) {
 				try {
@@ -1265,7 +1267,7 @@ namespace MonoDevelop.Ide.Editor
 			}
 			if (type.IsInstanceOfType (textEditorImpl))
 				res = res.Concat (textEditorImpl);
-			
+
 			var ext = textEditorImpl.EditorExtension;
 			while (ext != null) {
 				res = res.Concat (ext.OnGetContents (type));
@@ -1438,7 +1440,7 @@ namespace MonoDevelop.Ide.Editor
 		}
 
 		internal bool SuppressTooltips {
-			get { return textEditorImpl.SuppressTooltips; } 
+			get { return textEditorImpl.SuppressTooltips; }
 			set { textEditorImpl.SuppressTooltips = value; }
 		}
 		#endregion

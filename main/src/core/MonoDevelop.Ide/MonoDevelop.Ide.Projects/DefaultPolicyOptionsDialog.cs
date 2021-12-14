@@ -1,11 +1,11 @@
-// 
+//
 // DefaultPolicyOptionsDialog.cs
-// 
+//
 // Author:
 //   Michael Hutchinson <mhutchinson@novell.com>
-// 
+//
 // Copyright (C) 2009 Novell, Inc (http://www.novell.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
 // "Software"), to deal in the Software without restriction, including
@@ -13,10 +13,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -43,33 +43,33 @@ namespace MonoDevelop.Ide.Projects
 	public class DefaultPolicyOptionsDialog : OptionsDialog
 	{
 		ComboBox policiesCombo;
-		MenuButton newButton;
+		MonoDevelop.Components.MenuButton newButton;
 		Button deleteButton;
-		MenuButton exportButton;
+		MonoDevelop.Components.MenuButton exportButton;
 		List<PolicySet> sets = new List<PolicySet> ();
 		Dictionary<PolicySet,PolicySet> originalSets = new Dictionary<PolicySet, PolicySet> ();
-		
+
 		PolicySet editingSet;
 		PolicySet currentSet;
 		bool loading;
-		
+
 		public DefaultPolicyOptionsDialog (MonoDevelop.Components.Window parentWindow)
 			: base (parentWindow, new PolicySet (),
 			        "/MonoDevelop/ProjectModel/Gui/DefaultPolicyPanels")
 		{
 			this.Title = GettextCatalog.GetString ("Policies");
 			editingSet = (PolicySet) DataObject;
-			
+
 			HBox topBar = new HBox ();
 			topBar.Spacing = 3;
 			topBar.PackStart (new Label (GettextCatalog.GetString ("Editing Policy:")), false, false, 0);
-			
+
 			policiesCombo = ComboBox.NewText ();
 			topBar.PackStart (policiesCombo, false, false, 0);
-			
+
 			deleteButton = new Button (GettextCatalog.GetString ("Delete Policy"));
 			topBar.PackEnd (deleteButton, false, false, 0);
-			
+
 			exportButton = new MenuButton ();
 			exportButton.Label = GettextCatalog.GetString ("Export");
 			exportButton.ContextMenuRequested = delegate {
@@ -89,8 +89,8 @@ namespace MonoDevelop.Ide.Projects
 				return menu;
 			};
 			topBar.PackEnd (exportButton, false, false, 0);
-			
-			newButton = new MenuButton ();
+
+			newButton = new MonoDevelop.Components.MenuButton ();
 			newButton.Label = GettextCatalog.GetString ("Add Policy");
 			newButton.ContextMenuRequested = delegate {
 				ContextMenu menu = new ContextMenu ();
@@ -113,42 +113,42 @@ namespace MonoDevelop.Ide.Projects
 				return menu;
 			};
 			topBar.PackEnd (newButton, false, false, 0);
-			
+
 			Alignment align = new Alignment (0f, 0f, 1f, 1f);
 			align.LeftPadding = 9;
 			align.TopPadding = 9;
 			align.RightPadding = 9;
 			align.BottomPadding = 9;
 			align.Add (topBar);
-			
+
 			HeaderBox ebox = new HeaderBox ();
 			ebox.GradientBackground = true;
 			ebox.SetMargins (0, 1, 0, 0);
 			ebox.Add (align);
-			
+
 			ebox.ShowAll ();
-			
+
 			VBox.PackStart (ebox, false, false, 0);
 			VBox.BorderWidth = 0;
 			Box.BoxChild c = (Box.BoxChild) VBox [ebox];
 			c.Position = 0;
-			
+
 			foreach (PolicySet ps in PolicyService.GetUserPolicySets ()) {
 				PolicySet copy = ps.Clone ();
 				originalSets [copy] = ps;
 				sets.Add (copy);
 			}
 			FillPolicySets ();
-			
+
 			policiesCombo.Changed += HandlePoliciesComboChanged;
 			deleteButton.Clicked += HandleDeleteButtonClicked;
 		}
-		
+
 		protected override void ApplyChanges ()
 		{
 			base.ApplyChanges ();
 			ApplyPolicyChanges ();
-			
+
 			HashSet<PolicySet> usets = new HashSet<PolicySet> (PolicyService.GetUserPolicySets ());
 			foreach (PolicySet ps in sets) {
 				PolicySet orig;
@@ -163,7 +163,7 @@ namespace MonoDevelop.Ide.Projects
 			}
 			foreach (PolicySet ps in usets)
 				PolicyService.RemoveUserPolicySet (ps);
-			
+
 			PolicyService.SavePolicies ();
 		}
 
@@ -171,7 +171,7 @@ namespace MonoDevelop.Ide.Projects
 		{
 			if (!MessageService.Confirm (GettextCatalog.GetString ("Are you sure you want to delete the policy '{0}'?", currentSet.Name), AlertButton.Delete))
 				return;
-			
+
 			sets.Remove (currentSet);
 			currentSet = null;
 			FillPolicySets ();
@@ -183,7 +183,7 @@ namespace MonoDevelop.Ide.Projects
 			esets.ExceptWith (PolicyService.GetUserPolicySets ());
 			esets.UnionWith (sets);
 			esets.RemoveWhere (p => !p.Visible);
-			
+
 			NewPolicySetDialog dlg = new NewPolicySetDialog (new List<PolicySet> (esets));
 			try {
 				if (MessageService.RunCustomDialog (dlg, this) == (int) ResponseType.Ok) {
@@ -242,7 +242,7 @@ namespace MonoDevelop.Ide.Projects
 				}
 			}
 		}
-		
+
 		string GetUnusedName (string name)
 		{
 			string finalName = name;
@@ -293,17 +293,17 @@ namespace MonoDevelop.Ide.Projects
 				}
 			}
 		}
-		
+
 		void FillPolicySets ()
 		{
 			loading = true;
 			int current = policiesCombo.Active;
-			
+
 			((ListStore)policiesCombo.Model).Clear ();
 			policiesCombo.WidthRequest = -1;
-			
+
 			sets.Sort ((p1, p2) => string.Compare (p1.Name, p2.Name, StringComparison.CurrentCulture));
-			
+
 			foreach (PolicySet pset in sets) {
 				policiesCombo.AppendText (pset.Name ?? "");
 			}
@@ -313,12 +313,12 @@ namespace MonoDevelop.Ide.Projects
 				policiesCombo.Active = sets.Count - 1;
 			else
 				policiesCombo.Active = current;
-			
+
 			if (policiesCombo.SizeRequest ().Width < 200)
 				policiesCombo.WidthRequest = 200;
-			
+
 			loading = false;
-			
+
 			if (policiesCombo.Active != -1 && sets [policiesCombo.Active] != currentSet) {
 				currentSet = sets [policiesCombo.Active];
 				editingSet.Name = currentSet.Name;
@@ -326,7 +326,7 @@ namespace MonoDevelop.Ide.Projects
 			}
 			UpdateStatus ();
 		}
-		
+
 		void UpdateStatus ()
 		{
 			Gtk.Widget mainBox = MainBox;
@@ -364,7 +364,7 @@ namespace MonoDevelop.Ide.Projects
 						return;
 					}
 				}
-			
+
 				if (policiesCombo.Active != -1 && policiesCombo.Active < sets.Count) {
 					// Load the new values
 					currentSet = sets [policiesCombo.Active];
@@ -373,7 +373,7 @@ namespace MonoDevelop.Ide.Projects
 				}
 			}
 		}
-		
+
 		void ApplyPolicyChanges ()
 		{
 			if (policiesCombo.Active != -1 && sets.Count > 0)

@@ -1,21 +1,21 @@
-﻿// 
+﻿//
 // CodeFormattingPanelWidget.cs
-//  
+//
 // Author:
 //       Lluis Sanchez Gual <lluis@novell.com>
-// 
+//
 // Copyright (c) 2009 Novell, Inc (http://www.novell.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,6 +35,9 @@ using MonoDevelop.Core;
 using MonoDevelop.Projects.Policies;
 using MonoDevelop.Components;
 using System.Linq;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects.OptionPanels
 {
@@ -47,34 +50,34 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 		HashSet<string> mimeTypesWithPolicies = new HashSet<string> ();
 		bool internalPolicyUpdate;
 		CodeFormattingPanelWidget widget;
-		
+
 		public override void Initialize (MonoDevelop.Ide.Gui.Dialogs.OptionsDialog dialog, object dataObject)
 		{
 			base.Initialize (dialog, dataObject);
-			
+
 			foreach (MimeTypeOptionsPanelNode node in AddinManager.GetExtensionNodes ("/MonoDevelop/ProjectModel/Gui/MimeTypePolicyPanels"))
 				mimeTypesWithPolicies.Add (node.MimeType);
-			
+
 			var provider = dataObject as IPolicyProvider;
 			if (provider == null) {
 				provider = PolicyService.GetUserDefaultPolicySet ();
 				// When editing the global user preferences, the default values for policies are the IDE default values.
 				defaultPolicyContainer = PolicyService.SystemDefaultPolicies;
 			}
-			
+
 			policyContainer = provider.Policies;
 			if (!(dataObject is SolutionFolderItem) && !(dataObject is Solution)) {
 				globalMimeTypes = new List<string> ();
 				string userTypes = PropertyService.Get<string> ("MonoDevelop.Projects.GlobalPolicyMimeTypes", "");
 				globalMimeTypes.AddRange (userTypes.Split (new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
 			}
-			
+
 			foreach (string mt in GetItemMimeTypes ())
 				AddPanel (mt);
-			
+
 			policyContainer.PolicyChanged += HandlePolicyContainerPolicyChanged;
 		}
-		
+
 		public override void Dispose ()
 		{
 			base.Dispose ();
@@ -85,9 +88,9 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 		{
 			if (internalPolicyUpdate)
 				return;
-			
+
 			// The policy container has changed externally. The panel data has to be reloaded
-			
+
 			foreach (MimeTypePanelData pd in typeSections.Values) {
 				bool useParentPolicy = false;
 				bool modified = false;
@@ -110,7 +113,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			if (widget != null)
 				widget.Refresh ();
 		}
-		
+
 		MimeTypePanelData AddPanel (string mt)
 		{
 			var chain = new List<string> (IdeServices.DesktopService.GetMimeTypeInheritanceChain (mt).Where (mimeTypesWithPolicies.Contains));
@@ -132,14 +135,14 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			ParentDialog.AddChildSection (this, sec, data);
 			return data;
 		}
-		
+
 		void RemovePanel (string mt)
 		{
 			MimeTypePanelData data = typeSections [mt];
 			typeSections.Remove (mt);
 			ParentDialog.RemoveSection (data.Section);
 		}
-		
+
 		internal MimeTypePanelData AddGlobalMimeType (string mt)
 		{
 			if (!globalMimeTypes.Contains (mt)) {
@@ -148,18 +151,18 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			}
 			return null;
 		}
-		
+
 		internal void RemoveGlobalMimeType (string mt)
 		{
 			if (globalMimeTypes.Remove (mt))
 				RemovePanel (mt);
 		}
-		
+
 		public IEnumerable<MimeTypePanelData> GetMimeTypeData ()
 		{
 			return typeSections.Values;
 		}
-		
+
 		public PolicyContainer PolicyContainer {
 			get { return policyContainer; }
 		}
@@ -167,34 +170,34 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 		void LoadPolicyTypeData (MimeTypePanelData data, string mimeType, List<string> types)
 		{
 			List<IMimeTypePolicyOptionsPanel> panels = new List<IMimeTypePolicyOptionsPanel> ();
-			
+
 			bool useParentPolicy = false;
 			foreach (MimeTypeOptionsPanelNode node in AddinManager.GetExtensionNodes ("/MonoDevelop/ProjectModel/Gui/MimeTypePolicyPanels")) {
 				if (!types.Contains (node.MimeType))
 					continue;
-				
+
 				IMimeTypePolicyOptionsPanel panel = (IMimeTypePolicyOptionsPanel) node.CreateInstance (typeof(IMimeTypePolicyOptionsPanel));
 				panel.Initialize (ParentDialog, DataObject);
 				panel.InitializePolicy (policyContainer, defaultPolicyContainer, mimeType, mimeType == node.MimeType);
 				panel.Label = node.Label;
 				if (!panel.IsVisible ())
 					continue;
-				
+
 				if (!panel.HasCustomPolicy)
 					useParentPolicy = true;
-				
+
 				panels.Add (panel);
 			}
 			data.Panels = panels;
 			if (!policyContainer.IsRoot || ParentDialog is DefaultPolicyOptionsDialog)
 				data.UseParentPolicy = useParentPolicy;
 		}
-		
+
 		public override Control CreatePanelWidget ()
 		{
 			return widget = new CodeFormattingPanelWidget (this, ParentDialog);
 		}
-		
+
 		public override void ApplyChanges ()
 		{
 			if (globalMimeTypes != null) {
@@ -212,7 +215,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 				internalPolicyUpdate = false;
 			}
 		}
-		
+
 		public IEnumerable<string> GetItemMimeTypes ()
 		{
 			HashSet<string> types = new HashSet<string> ();
@@ -230,12 +233,12 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			}
 			return types;
 		}
-		
+
 		public bool IsUserMimeType (string type)
 		{
 			return globalMimeTypes != null && globalMimeTypes.Contains (type);
 		}
-		
+
 		void GetItemMimeTypes (HashSet<string> types, SolutionFolderItem item)
 		{
 			if (item is SolutionFolder) {
@@ -255,18 +258,18 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			get { return ParentDialog is MonoDevelop.Ide.Projects.DefaultPolicyOptionsDialog; }
 		}
 	}
-	
+
 	class MimetypeOptionsDialogSection : OptionsDialogSection
 	{
 		public MimetypeOptionsDialogSection (string mimetype): base (typeof(MimeTypePolicyOptionsSection))
 		{
 			this.MimeType = mimetype;
 		}
-		
+
 		//this is used by the options dialog to look up the icon as needed, at required scales
 		public string MimeType { get; private set; }
 	}
-	
+
 	[System.ComponentModel.ToolboxItem(true)]
 	partial class CodeFormattingPanelWidget : Gtk.Bin
 	{
@@ -274,13 +277,13 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 		Gtk.ListStore store;
 		OptionsDialog dialog;
 		CellRendererComboBox comboCell = new CellRendererComboBox();
-		
+
 		public CodeFormattingPanelWidget (CodeFormattingPanel panel, OptionsDialog dialog)
 		{
 			this.Build();
 			this.panel = panel;
 			this.dialog = dialog;
-			
+
 			store = new Gtk.ListStore (typeof(MimeTypePanelData), typeof(Xwt.Drawing.Image), typeof(string));
 			tree.Model = store;
 			tree.SearchColumn = -1; // disable the interactive search
@@ -288,7 +291,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			boxButtons.Visible = panel.DataObject is PolicySet;
 			Gtk.CellRendererText crt = new Gtk.CellRendererText ();
 			CellRendererImage crp = new CellRendererImage ();
-			
+
 			Gtk.TreeViewColumn col = new Gtk.TreeViewColumn ();
 			col.Title = GettextCatalog.GetString ("File Type");
 			col.PackStart (crp, false);
@@ -300,7 +303,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 
 			comboCell.Changed += OnPolicySelectionChanged;
 			Gtk.TreeViewColumn polCol = tree.AppendColumn (GettextCatalog.GetString ("Policy"), comboCell, new Gtk.TreeCellDataFunc (OnSetPolicyData));
-			
+
 			tree.Selection.Changed += delegate {
 				Gtk.TreeIter it;
 				tree.Selection.GetSelected (out it);
@@ -313,7 +316,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 
 			Fill ();
 			UpdateButtons ();
-			
+
 			tree.Selection.Changed += delegate {
 				UpdateButtons ();
 			};
@@ -328,7 +331,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 		static readonly string parentPolicyText = GettextCatalog.GetString ("(Inherited Policy)");
 
 		static readonly string customPolicyText = GettextCatalog.GetString ("(Custom)");
-		
+
 		void OnSetPolicyData (Gtk.TreeViewColumn treeColumn, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter)
 		{
 			MimeTypePanelData mt = (MimeTypePanelData) store.GetValue (iter, 0);
@@ -343,12 +346,12 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 				else
 					selection = customPolicyText;
 			}
-			
+
 			CellRendererComboBox comboCell = (CellRendererComboBox) cell;
 			comboCell.Values = GetComboOptions (mt);
 			comboCell.Text = selection;
 		}
-		
+
 		string[] GetComboOptions (MimeTypePanelData mt)
 		{
 			List<string> values = new List<string> ();
@@ -361,7 +364,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			values.Add (customPolicyText);
 			return values.ToArray ();
 		}
-		
+
 		IEnumerable<PolicySet> GetCandidateSets (MimeTypePanelData mt)
 		{
 			var pset = mt.PolicyContainer as PolicySet;
@@ -394,14 +397,14 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 				}
 			}
 		}
-		
+
 		void Fill ()
 		{
 			foreach (MimeTypePanelData mt in panel.GetMimeTypeData ()) {
 				store.AppendValues (mt, IdeServices.DesktopService.GetIconForType (mt.MimeType, Gtk.IconSize.Menu), mt.TypeDescription);
 			}
 		}
-		
+
 		public void Refresh ()
 		{
 			tree.QueueDraw ();
@@ -441,7 +444,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 				}
 			}
 		}
-		
+
 		void UpdateButtons ()
 		{
 			Gtk.TreeIter iter;
@@ -459,7 +462,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 		{
 			store.Clear();
 			comboCell.Changed -= OnPolicySelectionChanged;
-			
+
 			base.OnDestroyed();
 		}
 	}

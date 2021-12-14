@@ -1,21 +1,21 @@
-﻿// 
+﻿//
 // SearchResultWidget.cs
-//  
+//
 // Author:
 //       Mike Krüger <mkrueger@novell.com>
-// 
+//
 // Copyright (c) 2009 Novell, Inc (http://www.novell.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,6 +46,9 @@ using MonoDevelop.Core.Text;
 using MonoDevelop.Ide.Editor.Highlighting;
 using System.Threading.Tasks;
 using MonoDevelop.Ide.TypeSystem;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.FindInFiles
 {
@@ -56,10 +59,10 @@ namespace MonoDevelop.Ide.FindInFiles
 		readonly ToolButton buttonStop;
 
 		readonly ToggleToolButton buttonPin;
-		
+
 		const int SearchResultColumn = 0;
 		const int DidReadColumn      = 1;
-		
+
 		EditorTheme highlightStyle;
 
 		internal EditorTheme HighlightStyle {
@@ -68,7 +71,7 @@ namespace MonoDevelop.Ide.FindInFiles
 			}
 		}
 
-		ScrolledWindow scrolledwindowLogView; 
+		ScrolledWindow scrolledwindowLogView;
 		PadTreeView treeviewSearchResults;
 		Label labelStatus;
 		TextView textviewLog;
@@ -89,11 +92,11 @@ namespace MonoDevelop.Ide.FindInFiles
 		}
 
 		public bool AllowReuse {
-			get { 
-				return !buttonStop.Sensitive && !buttonPin.Active; 
+			get {
+				return !buttonStop.Sensitive && !buttonPin.Active;
 			}
 		}
-		
+
 		public SearchResultWidget ()
 		{
 			var vbox = new VBox ();
@@ -119,11 +122,11 @@ namespace MonoDevelop.Ide.FindInFiles
 				Editable = false,
 			};
 			scrolledwindowLogView.Add (textviewLog);
-			
+
 			store = new ListStore (typeof (SearchResult),
 				typeof (bool) // didRead
 				);
-			
+
 			treeviewSearchResults = new PadTreeView () {
 				Model = store,
 				HeadersClickable = true,
@@ -162,7 +165,7 @@ namespace MonoDevelop.Ide.FindInFiles
 			var fileNamePixbufRenderer = new CellRendererImage ();
 			fileNameColumn.PackStart (fileNamePixbufRenderer, false);
 			fileNameColumn.SetCellDataFunc (fileNamePixbufRenderer, FileIconDataFunc);
-			
+
 			fileNameColumn.PackStart (renderer, true);
 			fileNameColumn.SetCellDataFunc (renderer, FileNameDataFunc);
 			treeviewSearchResults.AppendColumn (fileNameColumn);
@@ -187,7 +190,7 @@ namespace MonoDevelop.Ide.FindInFiles
 			store.SetSortFunc (3, CompareFilePaths);
 
 			treeviewSearchResults.RowActivated += TreeviewSearchResultsRowActivated;
-			
+
 			buttonStop = new ToolButton (new ImageView (Gui.Stock.Stop, Gtk.IconSize.Menu), null) { Sensitive = false };
 			buttonStop.Clicked += ButtonStopClicked;
 			buttonStop.TooltipText = GettextCatalog.GetString ("Stop");
@@ -197,13 +200,13 @@ namespace MonoDevelop.Ide.FindInFiles
 			buttonClear.Clicked += ButtonClearClicked;
 			buttonClear.TooltipText = GettextCatalog.GetString ("Clear results");
 			toolbar.Insert (buttonClear, -1);
-			
+
 			var buttonOutput = new ToggleToolButton ();
 			buttonOutput.IconWidget = new ImageView (Gui.Stock.OutputIcon, Gtk.IconSize.Menu);
 			buttonOutput.Clicked += ButtonOutputClicked;
 			buttonOutput.TooltipText = GettextCatalog.GetString ("Show output");
 			toolbar.Insert (buttonOutput, -1);
-			
+
 			buttonPin = new ToggleToolButton ();
 			buttonPin.IconWidget = new ImageView (Gui.Stock.PinUp, Gtk.IconSize.Menu);
 			buttonPin.Clicked += ButtonPinClicked;
@@ -212,7 +215,7 @@ namespace MonoDevelop.Ide.FindInFiles
 
 			// store.SetSortColumnId (3, SortType.Ascending);
 			ShowAll ();
-			
+
 			scrolledwindowLogView.Hide ();
 			treeviewSearchResults.FixedHeightMode = true;
 
@@ -263,7 +266,7 @@ namespace MonoDevelop.Ide.FindInFiles
 		{
 			OpenSelectedMatches ();
 		}
-		
+
 		public void BeginProgress ()
 		{
 			IdeApp.Workbench.ActiveLocationList = this;
@@ -272,12 +275,12 @@ namespace MonoDevelop.Ide.FindInFiles
 			newStore.SetSortFunc (1, CompareProjectFileNames);
 			newStore.SetSortFunc (2, CompareFileNames);
 			newStore.SetSortFunc (3, CompareFilePaths);
-			newStore.SetSortColumnId (2, SortType.Ascending); 
+			newStore.SetSortColumnId (2, SortType.Ascending);
 			Reset ();
 			buttonStop.Sensitive = true;
 			treeviewSearchResults.FreezeChildNotify ();
 		}
-		
+
 		ListStore newStore;
 
 		public void EndProgress ()
@@ -293,10 +296,10 @@ namespace MonoDevelop.Ide.FindInFiles
 		{
 			treeviewSearchResults.GrabFocus ();
 			TreeIter iter;
-			if (store.GetIterFirst (out iter)) 
+			if (store.GetIterFirst (out iter))
 				treeviewSearchResults.Selection.SelectIter (iter);
 		}
-		
+
 		public void Reset ()
 		{
 			if (treeviewSearchResults.IsRealized)
@@ -307,7 +310,7 @@ namespace MonoDevelop.Ide.FindInFiles
 			labelStatus.Text = "";
 			textviewLog.Buffer.Clear ();
 		}
-		
+
 		protected override void OnDestroyed ()
 		{
 			Reset ();
@@ -330,7 +333,7 @@ namespace MonoDevelop.Ide.FindInFiles
 			}
 			return color;
 		}
-		
+
 		internal string AdjustColors (string markup)
 		{
 			var result = new StringBuilder ();
@@ -342,7 +345,7 @@ namespace MonoDevelop.Ide.FindInFiles
 			// On mac it's not possible to get the white background color with the Base or Background
 			// methods. If this bug is fixed or a better work around is found - remove this hack.
 			Color baseColor = Platform.IsMac ?treeviewSearchResults.Style.Light (treeviewSearchResults.State) : treeviewSearchResults.Style.Base (treeviewSearchResults.State);
-			
+
 			while (idx > 0) {
 				idx += "foreground=\"".Length;
 				result.Append (markup, offset, idx - offset);
@@ -352,7 +355,7 @@ namespace MonoDevelop.Ide.FindInFiles
 				}
 				offset = idx + 7;
 				string colorStr = markup.Substring (idx, 7);
-				
+
 				Color color = Color.Zero;
 
 				if (Color.Parse(colorStr, ref color))
@@ -369,19 +372,19 @@ namespace MonoDevelop.Ide.FindInFiles
 			return string.Format ("#{0:X2}{1:X2}{2:X2}", color.Red >> 8, color.Green >> 8, color.Blue >> 8);
 		}
 		void DoPopupMenu (Gdk.EventButton evt)
-		{ 
+		{
 			IdeApp.CommandService.ShowContextMenu (this.treeviewSearchResults, evt, new CommandEntrySet {
 				new CommandEntry (ViewCommands.Open),
 				new CommandEntry (EditCommands.Copy),
 				new CommandEntry (EditCommands.SelectAll),
 			}, this);
 		}
-		
+
 		public void ShowStatus (string text)
 		{
 			labelStatus.Text = text;
 		}
-		
+
 		static void FileIconDataFunc (TreeViewColumn column, CellRenderer cell, TreeModel model, TreeIter iter)
 		{
 			if (TreeIter.Zero.Equals (iter))
@@ -397,7 +400,7 @@ namespace MonoDevelop.Ide.FindInFiles
 		{
 			return string.Format ("<span weight=\"{1}\">{0}</span>", GLib.Markup.EscapeText (text), didRead ? "normal" : "bold");
 		}
-		
+
 		void FileNameDataFunc (TreeViewColumn column, CellRenderer cell, TreeModel model, TreeIter iter)
 		{
 			if (TreeIter.Zero.Equals (iter))
@@ -409,14 +412,14 @@ namespace MonoDevelop.Ide.FindInFiles
 				return;
 			fileNameRenderer.Markup = MarkupText (System.IO.Path.GetFileName (searchResult.FileName) + ":" + searchResult.GetLineNumber (this), didRead);
 		}
-		
+
 		int CompareLineNumbers (TreeModel model, TreeIter first, TreeIter second)
 		{
 			var loc1 = ((SearchResult)model.GetValue (first, SearchResultColumn)).GetLocation (this);
 			var loc2 = ((SearchResult)model.GetValue (second, SearchResultColumn)).GetLocation (this);
 			return loc1.Line.CompareTo (loc2.Line);
 		}
-		
+
 		static int DefaultSortFunc (TreeModel model, TreeIter first, TreeIter second)
 		{
 			return 0;
@@ -456,7 +459,7 @@ namespace MonoDevelop.Ide.FindInFiles
 
 			return System.IO.Path.GetDirectoryName (searchResult1.FileName).CompareTo (System.IO.Path.GetDirectoryName (searchResult2.FileName));
 		}
-		
+
 		void ResultPathDataFunc (TreeViewColumn column, CellRenderer cell, TreeModel model, TreeIter iter)
 		{
 			if (TreeIter.Zero.Equals (iter))
@@ -548,7 +551,7 @@ namespace MonoDevelop.Ide.FindInFiles
 					break;
 				case ';':
 					inChar = false;
-					if (!inTag) 
+					if (!inTag)
 						realPos++;
 					break;
 				case '<':
@@ -559,7 +562,7 @@ namespace MonoDevelop.Ide.FindInFiles
 					inTag = false;
 					break;
 				default:
-					if (!inTag && !inChar) 
+					if (!inTag && !inChar)
 						realPos++;
 					if (inTag)
 						lastTag.Append (ch);
@@ -567,7 +570,7 @@ namespace MonoDevelop.Ide.FindInFiles
 				}
 			}
 			tag = lastTag.ToString ();
-			if (realPos >= pos) 
+			if (realPos >= pos)
 				return markup.Length;
 			return -1;
 		}
@@ -579,24 +582,24 @@ namespace MonoDevelop.Ide.FindInFiles
 			if (text.EndsWith ("\n", StringComparison.Ordinal))
 				textviewLog.ScrollMarkOnscreen (textviewLog.Buffer.InsertMark);
 		}
-		
+
 		public int ResultCount {
 			get;
 			private set;
 		}
-		
+
 		public void Add (SearchResult result)
 		{
 			newStore.InsertWithValues (ResultCount++, result, false);
 		}
-		
+
 		public void AddRange (IEnumerable<SearchResult> results)
 		{
 			foreach (var result in results) {
 				Add (result);
 			}
 		}
-		
+
 		void OpenDocumentAt (TreeIter iter)
 		{
 			var result = store.GetValue (iter, SearchResultColumn) as SearchResult;
@@ -607,7 +610,7 @@ namespace MonoDevelop.Ide.FindInFiles
 			}
 		}
 
-		
+
 		public void OpenSelectedMatches ()
 		{
 			foreach (TreePath path in treeviewSearchResults.Selection.GetSelectedRows ()) {
@@ -618,12 +621,12 @@ namespace MonoDevelop.Ide.FindInFiles
 			}
 			IdeApp.Workbench.ActiveLocationList = this;
 		}
-		
+
 		public void SelectAll ()
 		{
 			treeviewSearchResults.Selection.SelectAll ();
 		}
-		
+
 		public void CopySelection ()
 		{
 			TreeModel model;
@@ -645,37 +648,37 @@ namespace MonoDevelop.Ide.FindInFiles
 			}
 			Clipboard clipboard = Clipboard.Get (Atom.Intern ("CLIPBOARD", false));
 			clipboard.Text = sb.ToString ();
-			
+
 			clipboard = Clipboard.Get (Atom.Intern ("PRIMARY", false));
 			clipboard.Text = sb.ToString ();
 		}
-		
+
 		public string ItemName {
 			get {
 				return GettextCatalog.GetString ("Search Result");
 			}
 		}
-		
+
 		public NavigationPoint GetNextLocation ()
 		{
 			TreeIter iter;
 			TreePath[] path = treeviewSearchResults.Selection.GetSelectedRows ();
 			if (path != null && path.Length > 0 && store.GetIter (out iter, path[0])) {
-				if (!store.IterNext (ref iter)) 
+				if (!store.IterNext (ref iter))
 					store.GetIterFirst (out iter);
 			} else {
 				store.GetIterFirst (out iter);
 			}
-			
+
 			return GetLocation (iter);
 		}
-		
+
 		public NavigationPoint GetPreviousLocation ()
 		{
 			TreeIter iter;
 			TreeIter prevIter = TreeIter.Zero;
 			TreePath selPath = treeviewSearchResults.Selection.GetSelectedRows ().LastOrDefault ();
-			
+
 			bool hasNext = store.GetIterFirst (out iter);
 			if (hasNext && IsIterSelected (selPath, iter))
 				selPath = null;
@@ -685,7 +688,7 @@ namespace MonoDevelop.Ide.FindInFiles
 				prevIter = iter;
 				hasNext = store.IterNext (ref iter);
 			}
-			
+
 			return GetLocation (prevIter);
 		}
 
@@ -708,13 +711,13 @@ namespace MonoDevelop.Ide.FindInFiles
 				return null;
 			return new SearchTextFileNavigationPoint (searchResult.FileName, location.Line, location.Column);
 		}
-		
-		class SearchTextFileNavigationPoint : TextFileNavigationPoint 
+
+		class SearchTextFileNavigationPoint : TextFileNavigationPoint
 		{
 			public SearchTextFileNavigationPoint (FilePath file, int line, int column) : base (file, line, column)
 			{
 			}
-			
+
 			protected override async Task<Gui.Document> DoShow ()
 			{
 				var doc = await base.DoShow ();
@@ -725,10 +728,10 @@ namespace MonoDevelop.Ide.FindInFiles
 					doc.DisableAutoScroll ();
 					JumpToCurrentLocation (textView);
 				});
-				
+
 				return doc;
 			}
-			
+
 		}
 	}
 

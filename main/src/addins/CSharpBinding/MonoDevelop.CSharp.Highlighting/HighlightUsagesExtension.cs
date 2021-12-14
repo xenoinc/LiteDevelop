@@ -1,21 +1,21 @@
-// 
+//
 // HighlightUsagesExtension.cs
-//  
+//
 // Author:
 //       Mike Krüger <mkrueger@novell.com>
-// 
+//
 // Copyright (c) 2010 Novell, Inc (http://www.novell.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -49,21 +49,45 @@ using MonoDevelop.Ide.TypeSystem;
 using MonoDevelop.Refactoring;
 using MonoDevelop.CSharp.Refactoring;
 using MonoDevelop.Ide.Editor.Highlighting;
-using Microsoft.CodeAnalysis.DocumentHighlighting;
-using Microsoft.VisualStudio.Platform;
-using MonoDevelop.Ide.Composition;
+
+// oe REVERTED from oe-20180406-7.4.3.8-dd to fix editor highlighting.
+// oe REVERTED from oe-20180406-7.4.3.8-dd to fix editor highlighting.
+// oe REVERTED from oe-20180406-7.4.3.8-dd to fix editor highlighting.
 
 namespace MonoDevelop.CSharp.Highlighting
 {
-	class HighlightUsagesExtension : AbstractUsagesExtension<ImmutableArray<DocumentHighlights>>
+	class UsageData
 	{
-		IDocumentHighlightsService highlightsService; 
+		public RefactoringSymbolInfo SymbolInfo;
+		public Document Document;
+		public int Offset;
 
+		public ISymbol Symbol {
+			get { return SymbolInfo != null ? SymbolInfo.Symbol ?? SymbolInfo.DeclaredSymbol : null; }
+		}
+	}
+
+	class HighlightUsagesExtension : AbstractUsagesExtension<UsageData>
+	{
+		static IHighlighter [] highlighters;
+
+		static HighlightUsagesExtension ()
+		{
+			try {
+				highlighters = typeof (HighlightUsagesExtension).Assembly
+					.GetTypes ()
+					.Where (t => !t.IsAbstract && typeof (IHighlighter).IsAssignableFrom (t))
+					.Select (Activator.CreateInstance)
+					.Cast<IHighlighter> ()
+					.ToArray ();
+			} catch (Exception e) {
+				LoggingService.LogError ("Error while loading highlighters.", e);
+				highlighters = Array.Empty<IHighlighter> ();
+			}
+		}
 		protected override void Initialize ()
 		{
 			base.Initialize ();
-			highlightsService = DocumentContext.RoslynWorkspace.Services.GetLanguageServices (LanguageNames.CSharp).GetService<IDocumentHighlightsService> ();
-
 			Editor.SetSelectionSurroundingProvider (new CSharpSelectionSurroundingProvider (Editor, DocumentContext));
 			fallbackHighlighting = Editor.SyntaxHighlighting;
 			UpdateHighlighting ();
@@ -85,9 +109,10 @@ namespace MonoDevelop.CSharp.Highlighting
 					Editor.SyntaxHighlighting = fallbackHighlighting;
 				return;
 			}
-			var old = Editor.SyntaxHighlighting as TagBasedSyntaxHighlighting;
-			if (old == null) {
-				Editor.SyntaxHighlighting = CompositionManager.Instance.GetExportedValue<ITagBasedSyntaxHighlightingFactory> ().CreateSyntaxHighlighting (Editor.TextView, "source.cs");
+			var old = Editor.SyntaxHighlighting as RoslynClassificationHighlighting;
+			if (old == null || old.DocumentId != DocumentContext.AnalysisDocument.Id) {
+				Editor.SyntaxHighlighting = new RoslynClassificationHighlighting ((MonoDevelopWorkspace)DocumentContext.RoslynWorkspace,
+																				  DocumentContext.AnalysisDocument.Id, "source.cs");
 			}
 		}
 
@@ -98,40 +123,151 @@ namespace MonoDevelop.CSharp.Highlighting
 			base.Dispose ();
 		}
 
-		protected async override Task<ImmutableArray<DocumentHighlights>> ResolveAsync (CancellationToken token)
+		protected async override Task<UsageData> ResolveAsync (CancellationToken token)
 		{
+			var doc = IdeApp.Workbench.ActiveDocument;
+		//old	if (doc == null || doc.FileName == FilePath.Null)
+			if (doc == null || doc.FilePath == FilePath.Null)
+				return new UsageData ();
+
+		//old	var analysisDocument = doc.AnalysisDocument;
 			var analysisDocument = DocumentContext?.AnalysisDocument;
 			if (analysisDocument == null)
-				return ImmutableArray<DocumentHighlights>.Empty;
+				return new UsageData ();
 
-			return await highlightsService.GetDocumentHighlightsAsync (analysisDocument, Editor.CaretOffset, ImmutableHashSet<Document>.Empty.Add (analysisDocument), token);
+		//old	var symbolInfo = await RefactoringSymbolInfo.GetSymbolInfoAsync (doc, doc.Editor, token);
+			var symbolInfo = await RefactoringSymbolInfo.GetSymbolInfoAsync (DocumentContext, Editor, token);
+			if (symbolInfo.Symbol == null && symbolInfo.DeclaredSymbol == null)
+				return new UsageData {
+					Document = analysisDocument,
+		//old			Offset = doc.Editor.CaretOffset
+					Offset = Editor.CaretOffset
+				};
+
+			if (symbolInfo.Symbol != null && !symbolInfo.Node.IsKind (SyntaxKind.IdentifierName) && !symbolInfo.Node.IsKind (SyntaxKind.GenericName))
+				return new UsageData ();
+
+			return new UsageData {
+				Document = analysisDocument,
+				SymbolInfo = symbolInfo,
+		//old		Offset = doc.Editor.CaretOffset
+				Offset = Editor.CaretOffset
+			};
 		}
 
-		protected override Task<IEnumerable<MemberReference>> GetReferencesAsync (ImmutableArray<DocumentHighlights> resolveResult, CancellationToken token)
+		protected override async Task<IEnumerable<MemberReference>> GetReferencesAsync (UsageData resolveResult, CancellationToken token)
 		{
 			var result = new List<MemberReference> ();
-			foreach (var highlight in resolveResult) {
-				foreach (var span in highlight.HighlightSpans) {
-					result.Add (new MemberReference (highlight, highlight.Document.FilePath, span.TextSpan.Start, span.TextSpan.Length) {
-						ReferenceUsageType = ConvertKind (span.Kind)
+			if (resolveResult.Symbol == null) {
+				if (resolveResult.Document == null)
+					return result;
+				var root = await resolveResult.Document.GetSyntaxRootAsync (token).ConfigureAwait (false);
+				var doc2 = resolveResult.Document;
+				var offset = resolveResult.Offset;
+				if (!root.Span.Contains (offset))
+					return result;
+				foreach (var highlighter in highlighters) {
+					try {
+						foreach (var span in highlighter.GetHighlights (root, offset, token)) {
+							result.Add (new MemberReference (span, doc2.FilePath, span.Start, span.Length) {
+								ReferenceUsageType = ReferenceUsageType.Keyword
+							});
+						}
+					} catch (Exception e) {
+						LoggingService.LogError ("Highlighter " + highlighter + " threw exception.", e);
+					}
+				}
+				return result;
+			}
+
+			var doc = resolveResult.Document;
+			var documents = ImmutableHashSet.Create (doc);
+
+		//rev	foreach (var symbol in await CSharpFindReferencesProvider.GatherSymbols (resolveResult.Symbol, resolveResult.Document.Project.Solution, token)) {
+			var tmp1 = Microsoft.CodeAnalysis.FindSymbols.SymbolAndProjectId.Create( resolveResult.Symbol, resolveResult.Document.Project.Id );
+			foreach (var symbol in await CSharpFindReferencesProvider.GatherSymbols (tmp1, resolveResult.Document.Project.Solution, token)) {
+				// "symbol" old type is ISymbol but new type is SymbolAndProjectId.
+		//rev		foreach (var loc in symbol.Locations) {
+				foreach (var loc in symbol.Symbol.Locations) {
+					if (loc.IsInSource && loc.SourceTree.FilePath == doc.FilePath)
+						result.Add (new MemberReference (symbol, doc.FilePath, loc.SourceSpan.Start, loc.SourceSpan.Length) {
+							ReferenceUsageType = ReferenceUsageType.Declaration
+						});
+				}
+
+			//rev	foreach (var mref in await SymbolFinder.FindReferencesAsync (symbol, DocumentContext.AnalysisDocument.Project.Solution, documents, token)) {
+				foreach (var mref in await SymbolFinder.FindReferencesAsync (symbol.Symbol, DocumentContext.AnalysisDocument.Project.Solution, documents, token)) {
+					foreach (var loc in mref.Locations) {
+						Microsoft.CodeAnalysis.Text.TextSpan span = loc.Location.SourceSpan;
+						var root = loc.Location.SourceTree.GetRoot ();
+						var node = root.FindNode (loc.Location.SourceSpan);
+						var trivia = root.FindTrivia (loc.Location.SourceSpan.Start);
+						if (!trivia.IsKind (SyntaxKind.SingleLineDocumentationCommentTrivia)) {
+							span = node.Span;
+						}
+
+						if (span.Start != loc.Location.SourceSpan.Start) {
+							span = loc.Location.SourceSpan;
+						}
+						result.Add (new MemberReference (symbol, doc.FilePath, span.Start, span.Length) {
+							ReferenceUsageType = GetUsage (node)
+						});
+					}
+				}
+
+			//rev	foreach (var loc in await GetAdditionalReferencesAsync (doc, symbol, token)) {
+				foreach (var loc in await GetAdditionalReferencesAsync (doc, symbol.Symbol, token)) {
+					result.Add (new MemberReference (symbol, doc.FilePath, loc.SourceSpan.Start, loc.SourceSpan.Length) {
+						ReferenceUsageType = ReferenceUsageType.Write
 					});
 				}
 			}
-			return Task.FromResult((IEnumerable<MemberReference>)result);
+
+			return result;
 		}
 
-		static ReferenceUsageType ConvertKind (HighlightSpanKind kind)
+		async Task<IEnumerable<Location>> GetAdditionalReferencesAsync (Document document, ISymbol symbol, CancellationToken cancellationToken)
 		{
-			switch (kind) {
-			case HighlightSpanKind.Definition:
-				return ReferenceUsageType.Declaration;
-			case HighlightSpanKind.Reference:
-				return ReferenceUsageType.Read;
-			case HighlightSpanKind.WrittenReference:
-				return ReferenceUsageType.ReadWrite;
-			default:
-				return ReferenceUsageType.Unknown;
+			// The FindRefs engine won't find references through 'var' for performance reasons.
+			// Also, they are not needed for things like rename/sig change, and the normal find refs
+			// feature.  However, we would lke the results to be highlighted to get a good experience
+			// while editing (especially since highlighting may have been invoked off of 'var' in
+			// the first place).
+			//
+			// So we look for the references through 'var' directly in this file and add them to the
+			// results found by the engine.
+			List<Location> results = null;
+
+			if (symbol is INamedTypeSymbol && symbol.Name != "var") {
+				var originalSymbol = symbol.OriginalDefinition;
+				var root = await document.GetSyntaxRootAsync (cancellationToken).ConfigureAwait (false);
+
+				var descendents = root.DescendantNodes ();
+				var semanticModel = default (SemanticModel);
+
+				foreach (var type in descendents.OfType<IdentifierNameSyntax> ()) {
+					cancellationToken.ThrowIfCancellationRequested ();
+
+					if (type.IsVar) {
+						if (semanticModel == null) {
+							semanticModel = await document.GetSemanticModelAsync (cancellationToken).ConfigureAwait (false);
+						}
+
+						var boundSymbol = semanticModel.GetSymbolInfo (type, cancellationToken).Symbol;
+						boundSymbol = boundSymbol == null ? null : boundSymbol.OriginalDefinition;
+
+						if (originalSymbol.Equals (boundSymbol)) {
+							if (results == null) {
+								results = new List<Location> ();
+							}
+
+							results.Add (type.GetLocation ());
+						}
+					}
+				}
 			}
+
+			return results ?? SpecializedCollections.EmptyEnumerable<Location> ();
 		}
 
 		internal static ReferenceUsageType GetUsage (SyntaxNode node)
@@ -148,5 +284,7 @@ namespace MonoDevelop.CSharp.Highlighting
 				return ReferenceUsageType.ReadWrite;
 			return ReferenceUsageType.Read;
 		}
+
 	}
 }
+

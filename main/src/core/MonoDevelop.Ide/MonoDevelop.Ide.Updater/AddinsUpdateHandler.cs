@@ -28,7 +28,11 @@ using MonoDevelop.Core;
 using Mono.Addins.Setup;
 using Gtk;
 using MonoDevelop.Core.ProgressMonitoring;
+#if GTK3
+using Mono.Addins.GuiGtk3;
+#else
 using Mono.Addins.Gui;
+#endif
 using MonoDevelop.Ide.ProgressMonitoring;
 using Mono.Addins;
 using MonoDevelop.Core.Setup;
@@ -78,7 +82,7 @@ namespace MonoDevelop.Ide.Updater
 		{
 			if (!UpdateService.NotifyAddinUpdates)
 				return;
-			
+
 			updateIcon = IdeApp.Workbench.StatusBar.ShowStatusIcon (ImageService.GetIcon (Gui.Stock.Updates, IconSize.Menu));
 			string s = GettextCatalog.GetString ("New extension updates are available:");
 			for (int n=0; n<updates.Length && n < 10; n++)
@@ -98,37 +102,38 @@ namespace MonoDevelop.Ide.Updater
 		{
 			if (args.Button == Xwt.PointerButton.Left) {
 				HideAlert ();
-				OpenAddinManagerWindow ();
+			//oe	OpenAddinManagerWindow ();
+				AddinManagerWindow.Run (IdeApp.Workbench.RootWindow.Visible ? IdeApp.Workbench.RootWindow : null);
 			}
 		}
 
-		static void OpenAddinManagerWindow ()
-		{
-			if (!IdeApp.Workbench.RootWindow.Visible && WelcomePage.WelcomePageService.WelcomeWindow.nativeWidget is AppKit.NSWindow parentNsWindow) {
-				var dlg = AddinManagerWindow.Create ();
-
-				EventHandler shownEvent = null;
-				shownEvent = (s, e) => {
-					dlg.Shown -= shownEvent;
-					try {
-						var nativeWindow = Components.Mac.GtkMacInterop.GetNSWindow (dlg);
-						MessageService.CenterWindow (nativeWindow, parentNsWindow);
-						parentNsWindow.AddChildWindow (nativeWindow, AppKit.NSWindowOrderingMode.Above);
-					} catch (Exception ex) {
-						LoggingService.LogInternalError (ex);
-					}
-				};
-
-				dlg.Shown += shownEvent;
-				try {
-					dlg.Run ();
-				} finally {
-					dlg.Destroy ();
-				}
-			} else {
-				AddinManagerWindow.Run (IdeApp.Workbench.RootWindow);
-			}
-		}
+	//oe	static void OpenAddinManagerWindow ()
+	//oe	{
+	//oe		if (!IdeApp.Workbench.RootWindow.Visible && WelcomePage.WelcomePageService.WelcomeWindow.nativeWidget is AppKit.NSWindow parentNsWindow) {
+	//oe			var dlg = AddinManagerWindow.Create ();
+	//oe
+	//oe			EventHandler shownEvent = null;
+	//oe			shownEvent = (s, e) => {
+	//oe				dlg.Shown -= shownEvent;
+	//oe				try {
+	//oe					var nativeWindow = Components.Mac.GtkMacInterop.GetNSWindow (dlg);
+	//oe					MessageService.CenterWindow (nativeWindow, parentNsWindow);
+	//oe					parentNsWindow.AddChildWindow (nativeWindow, AppKit.NSWindowOrderingMode.Above);
+	//oe				} catch (Exception ex) {
+	//oe					LoggingService.LogInternalError (ex);
+	//oe				}
+	//oe			};
+	//oe
+	//oe			dlg.Shown += shownEvent;
+	//oe			try {
+	//oe				dlg.Run ();
+	//oe			} finally {
+	//oe				dlg.Destroy ();
+	//oe			}
+	//oe		} else {
+	//oe			AddinManagerWindow.Run (IdeApp.Workbench.RootWindow);
+	//oe		}
+	//oe	}
 
 		public async static void ShowManager ()
 		{
@@ -140,7 +145,8 @@ namespace MonoDevelop.Ide.Updater
 				await t;
 			}
 			HideAlert ();
-			OpenAddinManagerWindow ();
+		//oe	OpenAddinManagerWindow ();
+			AddinManagerWindow.Run (IdeApp.Workbench.RootWindow.Visible ? IdeApp.Workbench.RootWindow : null);
 		}
 
 		public static void HideAlert ()

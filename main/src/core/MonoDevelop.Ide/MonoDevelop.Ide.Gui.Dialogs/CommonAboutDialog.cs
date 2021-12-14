@@ -46,6 +46,9 @@ using Mono.Addins;
 using System.Collections.Generic;
 using MonoDevelop.Components;
 
+// oe NOTICE the original dialog appears with a very small size, and cannot be resized.
+// oe REVERTED from MD-7.8.
+
 namespace MonoDevelop.Ide.Gui.Dialogs
 {
 	public static class AboutDialogImage
@@ -57,8 +60,16 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 	{
 		public CommonAboutDialog ()
 		{
+
+Console.WriteLine( "oeDEBUG :: CommonAboutDialog ctor" );
+
 			Name = "wizard_dialog";
-			Title = string.Format (GettextCatalog.GetString ("About {0}"), BrandingService.ApplicationName);
+
+		//oe	Title = string.Format (GettextCatalog.GetString ("About {0}"), BrandingService.ApplicationName);
+
+			Title = string.Format (GettextCatalog.GetString ("About {0}"), BrandingService.ApplicationLongName);
+			TransientFor = IdeApp.Workbench.RootWindow; // oe REVERTED from monodevelop-7.8
+
 			AllowGrow = false;
 			HasSeparator = false;
 			BorderWidth = 0;
@@ -70,7 +81,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			notebook.AppendPage (new AboutMonoDevelopTabPage (), new Label (Title));
 			notebook.AppendPage (new VersionInformationTabPage (), new Label (GettextCatalog.GetString ("Version Information")));
 			VBox.PackStart (notebook, true, true, 0);
-			
+
 			var copyButton = new Button () { Label = GettextCatalog.GetString ("Copy Information") };
 			copyButton.Clicked += (sender, e) => CopyBufferToClipboard ();
 			ActionArea.PackEnd (copyButton, false, false, 0);
@@ -91,6 +102,8 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 				}
 			};
 			backButton.HasDefault = backButton.CanDefault = true;
+
+			ShowAll (); // oe REVERTED from monodevelop-7.8
 		}
 
 		static void CopyBufferToClipboard ()
@@ -120,7 +133,9 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 
 		public static void ShowAboutDialog ()
 		{
+Console.WriteLine( "oeDEBUG :: CommonAboutDialog.ShowAboutDialog()" );
 			if (Platform.IsMac) {
+Console.WriteLine( "oeDEBUG :: CommonAboutDialog.ShowAboutDialog() IsMac" );
 				if (instance == null) {
 					var parent = IdeServices.DesktopService.GetFocusedTopLevelWindow ();
 					instance = new CommonAboutDialog ();

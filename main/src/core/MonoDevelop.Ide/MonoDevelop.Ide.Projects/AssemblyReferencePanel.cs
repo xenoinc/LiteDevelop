@@ -1,22 +1,22 @@
 // AssemblyReferencePanel.cs
-//  
+//
 // Author:
 //       Todd Berman <tberman@sevenl.net>
 //       Lluis Sanchez Gual <lluis@novell.com>
-// 
+//
 // Copyright (c) 2004 Todd Berman
 // Copyright (c) 2009 Novell, Inc (http://www.novell.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -41,6 +41,9 @@ using MonoDevelop.Ide.Gui.Dialogs;
 using MonoDevelop.Components.Extensions;
 using System.Collections.Generic;
 using System.Reflection;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects
 {
@@ -64,7 +67,7 @@ namespace MonoDevelop.Ide.Projects
 					Version = "";
 				}
 			}
-			
+
 			public FilePath File;
 			public string Version;
 			public bool Selected;
@@ -192,7 +195,7 @@ namespace MonoDevelop.Ide.Projects
 
 		FilePath nugetDir;
 		DotNetProject project;
-		
+
 		public void SetProject (DotNetProject configureProject)
 		{
 			this.project = configureProject;
@@ -219,7 +222,7 @@ namespace MonoDevelop.Ide.Projects
 			basePath = configureProject.BaseDirectory;
 			Reset ();
 		}
-		
+
 		bool IsNuGetAssembly (FilePath p)
 		{
 			return p.IsChildPathOf (nugetDir);
@@ -242,7 +245,7 @@ namespace MonoDevelop.Ide.Projects
 				Reset ();
 			}
 		}
-		
+
 		public void SetFilter (string filter)
 		{
 			if (!string.IsNullOrEmpty (filter))
@@ -251,7 +254,7 @@ namespace MonoDevelop.Ide.Projects
 				stringMatcher = null;
 			Reset ();
 		}
-		
+
 		public void Reset ()
 		{
 			store.Clear ();
@@ -273,11 +276,11 @@ namespace MonoDevelop.Ide.Projects
 					version = GLib.Markup.EscapeText (asm.Version);
 				}
 
-				store.AppendValues (name, 
-					version, 
-					asm, 
-					asm.Selected, 
-					asm.File.ToString (), 
+				store.AppendValues (name,
+					version,
+					asm,
+					asm.Selected,
+					asm.File.ToString (),
 					MonoDevelop.Ide.Gui.Stock.OpenFolder,
 					matchRank);
 			}
@@ -287,7 +290,7 @@ namespace MonoDevelop.Ide.Projects
 		{
 			StringBuilder result = StringBuilderCache.Allocate ();
 			int lastPos = 0;
-			var color = HslColor.GenerateHighlightColors (widget.Style.Base (StateType.Normal), 
+			var color = HslColor.GenerateHighlightColors (widget.Style.Base (StateType.Normal),
 				widget.Style.Text (StateType.Normal), 3)[2];
 			for (int n=0; n < matches.Length; n++) {
 				int pos = matches[n] - startIndex;

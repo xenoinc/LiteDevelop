@@ -40,17 +40,101 @@ namespace Microsoft.VisualStudio.Platform
 		[Import]
         internal ITextDocumentFactoryService TextDocumentFactoryService { get; private set; }
 
+	// oe REVERTED...
+	[Import]
+	internal ITextEditorFactoryService TextEditorFactoryService { get; private set; }
+
+	// oe REVERTED...
+        [Import]
+        internal IMimeToContentTypeRegistryService MimeToContentTypeRegistryService { get; private set; }
+
         [Import]
         internal IContentTypeRegistryService ContentTypeRegistryService { get; private set; }
 
         [Import]
         internal IBufferTagAggregatorFactoryService BufferTagAggregatorFactoryService { get; private set; }
 
-        [Import]
+		[Import]
 		internal IClassifierAggregatorService ClassifierAggregatorService { get; private set; }
 
 		[Import]
 		internal IViewClassifierAggregatorService ViewClassifierAggregatorService { get; private set; }
+    }
+
+	// oe REVERTED...
+    public interface IMimeToContentTypeRegistryService
+    {
+        string GetMimeType(IContentType type);
+        IContentType GetContentType(string type);
+
+        void LinkTypes(string mimeType, IContentType contentType);
+    }
+
+	// oe REVERTED...
+    [Export(typeof(IMimeToContentTypeRegistryService))]
+    public class MimeToContentTypeRegistryService : IMimeToContentTypeRegistryService, IPartImportsSatisfiedNotification
+    {
+		[Import]
+		IContentTypeRegistryService ContentTypeRegistryService { get; set; }
+
+		[Export]
+		[Name ("csharp")]
+		[BaseDefinition ("code")]
+		public ContentTypeDefinition codeContentType;
+
+		public string GetMimeType(IContentType type)
+        {
+            string mimeType;
+            if (this.maps.Item2.TryGetValue(type, out mimeType))
+            {
+                return mimeType;
+            }
+
+            return (ContentTypeRegistryService as IContentTypeRegistryService2).GetMimeType (type);
+        }
+
+        public IContentType GetContentType(string type)
+        {
+            IContentType contentType;
+            if (this.maps.Item1.TryGetValue(type, out contentType))
+            {
+                return contentType;
+            }
+
+            return (ContentTypeRegistryService as IContentTypeRegistryService2).GetContentTypeForMimeType (type);
+        }
+
+        public void LinkTypes(string mimeType, IContentType contentType)
+        {
+            var oldMap = Volatile.Read(ref this.maps);
+            while (true)
+            {
+                if (oldMap.Item1.ContainsKey(mimeType) || oldMap.Item2.ContainsKey(contentType))
+                    break;
+
+                var newMap = Tuple.Create(oldMap.Item1.Add(mimeType, contentType), oldMap.Item2.Add(contentType, mimeType));
+                var result = Interlocked.CompareExchange(ref this.maps, newMap, oldMap);
+                if (result == oldMap)
+                {
+                    break;
+                }
+
+                oldMap = result;
+            }
+        }
+
+		void LinkTypes (string mimeType, string contentType)
+		{
+			LinkTypes (mimeType, ContentTypeRegistryService.GetContentType (contentType));
+		}
+
+		void IPartImportsSatisfiedNotification.OnImportsSatisfied ()
+		{
+			LinkTypes ("text/plain", "text");
+			LinkTypes ("text/x-csharp", "csharp");
+		}
+
+		Tuple<ImmutableDictionary<string, IContentType>, ImmutableDictionary<IContentType, string>> maps = Tuple.Create(ImmutableDictionary<string, IContentType>.Empty, ImmutableDictionary<IContentType, string>.Empty);
     }
 
     // Fold back into Text.Def.TextData.TextSnapshotToTextReader

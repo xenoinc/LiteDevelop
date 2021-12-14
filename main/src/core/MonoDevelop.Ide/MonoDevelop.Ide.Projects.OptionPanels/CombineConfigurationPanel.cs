@@ -34,13 +34,16 @@ using MonoDevelop.Core;
 using MonoDevelop.Ide.Gui.Dialogs;
 using MonoDevelop.Components;
 using Gtk;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects.OptionPanels
 {
 	internal class CombineConfigurationPanel : MultiConfigItemOptionsPanel
 	{
 		CombineConfigurationPanelWidget widget;
-		
+
 		public override Control CreatePanelWidget()
 		{
 			return widget = new CombineConfigurationPanelWidget ((MultiConfigItemOptionsDialog) ParentDialog, ConfiguredSolution);
@@ -50,7 +53,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 		{
 			widget.Load ((SolutionConfiguration) CurrentConfiguration);
 		}
-		
+
 		public override void ApplyChanges ()
 		{
 	        widget.Store ();
@@ -67,11 +70,11 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 		const int ProjectNameCol = 0;
 		const int BuildFlagCol = 1;
 		const int ProjectCol = 2;
-		
+
 		public CombineConfigurationPanelWidget (MultiConfigItemOptionsDialog parentDialog, Solution solution)
 		{
 			Build ();
-			
+
 			this.parentDialog = parentDialog;
 			this.solution = solution;
 
@@ -79,7 +82,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			configsList.Model = store;
 			configsList.SearchColumn = -1; // disable the interactive search
 			configsList.HeadersVisible = true;
-			
+
 			TreeViewColumn col = new TreeViewColumn ();
 			CellRendererText sr = new CellRendererText ();
 			col.PackStart (sr, true);
@@ -88,18 +91,18 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			col.Title = GettextCatalog.GetString ("Solution Item");
 			configsList.AppendColumn (col);
 			col.SortColumnId = ProjectNameCol;
-			
+
 			CellRendererToggle tt = new CellRendererToggle ();
 			tt.Activatable = true;
 			tt.Toggled += new ToggledHandler (OnBuildToggled);
 			configsList.AppendColumn (GettextCatalog.GetString ("Build"), tt, "active", BuildFlagCol);
-			
+
 			CellRendererComboBox comboCell = new CellRendererComboBox ();
 			comboCell.Changed += new ComboSelectionChangedHandler (OnConfigSelectionChanged);
 			configsList.AppendColumn (GettextCatalog.GetString ("Configuration"), comboCell, new TreeCellDataFunc (OnSetConfigurationsData));
 			store.SetSortColumnId (ProjectNameCol, SortType.Ascending);
 		}
-		
+
 		public void Load (SolutionConfiguration config)
 		{
 			configuration = config;
@@ -110,12 +113,12 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 				store.AppendValues (it.Name, ce != null && ce.Build, it);
 			}
 		}
-		
-		void OnSetConfigurationsData (Gtk.TreeViewColumn treeColumn, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter)
+
+		void OnSetConfigurationsData (Gtk.TreeViewColumn treeColumn, Gtk.CellRenderer cell, TreeModel model, Gtk.TreeIter iter)
 		{
 			var item = (SolutionItem) store.GetValue (iter, ProjectCol);
 			ConfigurationData data = parentDialog.ConfigurationData.FindConfigurationData (item);
-			
+
 			CellRendererComboBox comboCell = (CellRendererComboBox) cell;
 			comboCell.Values = data.Configurations.Select (c => c.Id).ToArray ();
 
@@ -132,7 +135,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			var entry = configuration.GetEntryForItem (item);
 			return entry != null ? entry.ItemConfiguration : (item.DefaultConfiguration != null ? item.DefaultConfiguration.Id : "");
 		}
-		
+
 		void OnBuildToggled (object sender, ToggledArgs args)
 		{
 			TreeIter iter;
@@ -155,7 +158,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			entry.ItemConfiguration = conf;
 			return entry;
 		}
-		
+
 		void OnConfigSelectionChanged (object s, ComboSelectionChangedArgs args)
 		{
 			TreeIter iter;
@@ -175,7 +178,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 					entry.ItemConfiguration = null;
 			}
 		}
-		
+
 		public void Store ()
 		{
 			// Data stored at dialog level

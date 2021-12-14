@@ -13,10 +13,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -38,6 +38,9 @@ using MonoDevelop.Core;
 using MonoDevelop.Ide.Gui.Dialogs;
 using MonoDevelop.Components.Commands;
 using System.Linq;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 #pragma warning disable 612
 
@@ -51,7 +54,7 @@ namespace MonoDevelop.Ide.ExternalTools
 		{
 			return widget = new ExternalToolPanelWidget ();
 		}
-		
+
 		public override bool ValidateChanges ()
 		{
 			return widget.Validate ();
@@ -62,29 +65,29 @@ namespace MonoDevelop.Ide.ExternalTools
 			widget.Store ();
 		}
 	}
-	
-	public partial class ExternalToolPanelWidget : Gtk.Bin 
+
+	public partial class ExternalToolPanelWidget : Gtk.Bin
 	{
 		// gtk controls
 		ListStore toolListBoxStore;
-		
+
 		// these are the control names which are enabled/disabled depending if tool is selected
 		Widget[] dependendControls;
-		 
+
 		// needed for treeview listbox
 		int toolListBoxItemCount = 0;
 		bool lockStoreValues = false;
 
 		EventBoxTooltip keyBindingInfoTooltip;
 
-		public ExternalToolPanelWidget () 
+		public ExternalToolPanelWidget ()
 		{
 			Build ();
-			// instantiate controls			
+			// instantiate controls
 			toolListBoxStore = new ListStore (typeof (string), typeof (ExternalTool));
 
 			dependendControls = new Widget[] {
-				titleTextBox, argumentTextBox, 
+				titleTextBox, argumentTextBox,
 				workingDirTextBox, promptArgsCheckBox, useOutputPadCheckBox,
 				titleLabel, argumentLabel, commandLabel, defaultKeyLabel,
 				defaultKeyTextBox, keyBindingInfoEventBox,
@@ -93,7 +96,7 @@ namespace MonoDevelop.Ide.ExternalTools
 				saveCurrentFileCheckBox,
 				tagSelectorArgs, tagSelectorPath
 			};
-			 
+
 			foreach (ExternalTool tool in ExternalToolService.Tools) {
 				toolListBoxStore.AppendValues (tool.MenuCommand, tool);
 				toolListBoxItemCount ++;
@@ -109,7 +112,7 @@ namespace MonoDevelop.Ide.ExternalTools
 
 			tagSelectorArgs.TagModel = IdeApp.Workbench.GetStringTagModelDescription ();
 			tagSelectorArgs.TargetEntry = argumentTextBox;
-			
+
 			tagSelectorPath.TagModel = IdeApp.Workbench.GetStringTagModelDescription ();
 			tagSelectorPath.TargetEntry = workingDirTextBox;
 
@@ -122,7 +125,7 @@ namespace MonoDevelop.Ide.ExternalTools
 			addButton.Clicked             += AddButtonClicked;
 			moveUpButton.Clicked          += MoveUpButtonClicked;
 			moveDownButton.Clicked        += MoveDownButtonClicked;
-			
+
 			browseButton.PathChanged        += StoreValuesInSelectedTool;
 			titleTextBox.Changed            += StoreValuesInSelectedTool;
 			argumentTextBox.Changed         += StoreValuesInSelectedTool;
@@ -177,25 +180,25 @@ namespace MonoDevelop.Ide.ExternalTools
 		{
 			if (toolListBox.Selection.CountSelectedRows () == 1) {
 				TreeIter selectedItem;
-				TreeModel ls;				
+				TreeModel ls;
 				((ListStore)toolListBox.Model).GetIter (out selectedItem, (TreePath)toolListBox.Selection.GetSelectedRows (out ls)[0]);
 				// we know we have a selected item so get it's index
 				// use that to get the path of the item before it, and swap the two
 				int index = GetSelectedIndex (toolListBox);
 				// only swap if at the top
 				if (index > 0) {
-					TreeIter prev; 
+					TreeIter prev;
 					if (toolListBox.Model.GetIterFromString (out prev, (index - 1).ToString ()))
 						((ListStore)ls).Swap (selectedItem, prev);
 				}
 			}
 		}
-			 
+
 		void MoveDownButtonClicked (object sender, EventArgs e)
 		{
 			if (toolListBox.Selection.CountSelectedRows () == 1) {
 				TreeIter selectedItem;
-				TreeModel ls;				
+				TreeModel ls;
 				((ListStore)toolListBox.Model).GetIter (out selectedItem, (TreePath) toolListBox.Selection.GetSelectedRows(out ls)[0]);
 				// swap it with the next one
 				TreeIter toSwap = selectedItem;
@@ -298,15 +301,15 @@ namespace MonoDevelop.Ide.ExternalTools
 			if (accelIncomplete)
 				CurrentKey = chord != null ? chord : string.Empty;
 		}
-		
+
 		void StoreValuesInSelectedTool (object sender, EventArgs e)
 		{
-			if (lockStoreValues) 
+			if (lockStoreValues)
 				return;
 			ExternalTool selectedItem = SelectedTool;
-			if (selectedItem == null) 
+			if (selectedItem == null)
 				return;
-			
+
 			toolListBoxStore.SetValue (SelectedIter, 0, titleTextBox.Text);
 			selectedItem.MenuCommand        = titleTextBox.Text;
 			selectedItem.Command            = browseButton.Path.Trim ();
@@ -316,7 +319,7 @@ namespace MonoDevelop.Ide.ExternalTools
 			selectedItem.UseOutputPad       = useOutputPadCheckBox.Active;
 			selectedItem.SaveCurrentFile    = saveCurrentFileCheckBox.Active;
 		}
-		
+
 		TreeIter SelectedIter {
 			get {
 				if (toolListBox.Selection.CountSelectedRows () == 1) {
@@ -339,7 +342,7 @@ namespace MonoDevelop.Ide.ExternalTools
 				return null;
 			}
 		}
-		
+
 		void DisplayTool (ExternalTool externalTool)
 		{
 			SetEnabledStatus (externalTool != null, dependendControls);
@@ -364,13 +367,13 @@ namespace MonoDevelop.Ide.ExternalTools
 				lockStoreValues = false;
 			}
 		}
-	
+
 		void SelectionChanged (object sender, EventArgs e)
 		{
 			SetEnabledStatus (toolListBox.Selection.CountSelectedRows () > 0, removeButton);
 			DisplayTool (SelectedTool);
 		}
-		 
+
 		void RemoveButtonClicked (object sender, EventArgs e)
 		{
 			int selectedItemCount = toolListBox.Selection.CountSelectedRows ();
@@ -385,14 +388,14 @@ namespace MonoDevelop.Ide.ExternalTools
 					((ListStore)lv).GetIter (out selectedIters[i], path);
 					maxIndex = path.Indices[0];
 				}
-				 
+
 				// now delete each item in that list
 				foreach (TreeIter toDelete in selectedIters) {
 					TreeIter itr = toDelete;
 					toolListBoxItemCount--;
 					((ListStore)lv).Remove (ref itr);
 				}
-				 
+
 				if (toolListBoxItemCount == 0) {
 					SelectionChanged (this, EventArgs.Empty);
 				} else {
@@ -400,7 +403,7 @@ namespace MonoDevelop.Ide.ExternalTools
 				}
 			}
 		}
-		 
+
 		void AddButtonClicked (object sender, EventArgs e)
 		{
 			TreeIter itr = toolListBoxStore.AppendValues (GettextCatalog.GetString ("New Tool"), new ExternalTool());
@@ -408,7 +411,7 @@ namespace MonoDevelop.Ide.ExternalTools
 			toolListBox.Selection.UnselectAll ();
 			toolListBox.Selection.SelectIter (itr);
 		}
-		 
+
 		// added this event to get the last select row index from gtk TreeView
 		int GetSelectedIndex (Gtk.TreeView tv)
 		{
@@ -416,13 +419,13 @@ namespace MonoDevelop.Ide.ExternalTools
 				TreeIter selectedIter;
 				TreeModel lv;
 				((ListStore) toolListBox.Model).GetIter(out selectedIter, (TreePath) toolListBox.Selection.GetSelectedRows (out lv)[0]);
-				
+
 				// return index of first level node (since only 1 level list model)
 				return lv.GetPath (selectedIter).Indices[0];
 			}
 			return -1;
 		}
-		 
+
 		// added this event to set a specific row as selected from index
 		void SetSelectedIndex (Gtk.TreeView tv, int index)
 		{
@@ -431,7 +434,7 @@ namespace MonoDevelop.Ide.ExternalTools
 			tv.Selection.UnselectAll ();
 			tv.Selection.SelectPath (path);
 		}
-	 
+
 		// disables or enables (sets sensitivty) a specified array of widgets
 		public void SetEnabledStatus (bool enabled, params Widget[] controls)
 		{
@@ -443,7 +446,7 @@ namespace MonoDevelop.Ide.ExternalTools
 				}
 			}
 		}
-		
+
 		static string FilterPath (string path)
 		{
 			return StringParserService.Parse (path);
@@ -480,7 +483,7 @@ namespace MonoDevelop.Ide.ExternalTools
 			}
 			return true;
 		}
-		
+
 		public bool Store ()
 		{
 			List<ExternalTool> newlist = new List<ExternalTool> ();
@@ -493,7 +496,7 @@ namespace MonoDevelop.Ide.ExternalTools
 					newlist.Add (tool);
 				} while (toolListBox.Model.IterNext (ref current));
 			}
-			
+
 			ExternalToolService.Tools = newlist;
 			ExternalToolService.SaveTools ();
 			return true;

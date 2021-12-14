@@ -1,0 +1,7 @@
+<ExtensionModel>
+
+	<Extension path = "/MonoDevelop/Core/PlatformService">
+		<Class class = "MonoDevelop.Platform.GnomePlatform"/>
+	</Extension>
+	
+</ExtensionModel>

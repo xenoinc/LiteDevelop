@@ -13,10 +13,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -43,6 +43,9 @@ using System.Linq;
 using MonoDevelop.Ide.Editor;
 using System.Threading;
 using System.Threading.Tasks;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Tasks
 {
@@ -79,14 +82,14 @@ namespace MonoDevelop.Ide.Tasks
 		public CommentTasksView ()
 		{
 		}
-		
+
 		void CreateView ()
 		{
 			if (view != null)
 				return;
-			
+
 			ReloadPriorities ();
-			
+
 			IdeServices.TaskService.CommentTasksChanged += OnCommentTasksChanged;
 			CommentTag.SpecialCommentTagsChanged += OnCommentTagsChanged;
 
@@ -141,7 +144,7 @@ namespace MonoDevelop.Ide.Tasks
 			IdeApp.Preferences.UserTasksHighPrioColor.Changed += OnPropertyUpdated;
 			IdeApp.Preferences.UserTasksNormalPrioColor.Changed += OnPropertyUpdated;
 			IdeApp.Preferences.UserTasksLowPrioColor.Changed += OnPropertyUpdated;
-			
+
 			// Initialize with existing tags.
 			foreach (TaskListEntry t in comments)
 				AddGeneratedTask (t);
@@ -176,7 +179,7 @@ namespace MonoDevelop.Ide.Tasks
 				}
 			}
 		}
-		
+
 		void OnWorkspaceItemLoaded (object sender, EventArgs e)
 		{
 			comments.BeginTaskUpdates ();
@@ -200,7 +203,7 @@ namespace MonoDevelop.Ide.Tasks
 				loadedSlns.Remove (solution);
 			}
 		}
-		
+
 		void LastWorkspaceItemClosed (object sender, EventArgs e)
 		{
 			loadedSlns.Clear ();
@@ -211,7 +214,7 @@ namespace MonoDevelop.Ide.Tasks
 			Application.Invoke ((o, a) => {
 				foreach (var e in args.Changes) {
 					//because of parse queueing, it's possible for this event to come in after the solution is closed
-					//so we track which solutions are currently open so that we don't leak memory by holding 
+					//so we track which solutions are currently open so that we don't leak memory by holding
 					// on to references to closed projects
 					if (e.Project != null && e.Project.ParentSolution != null && loadedSlns.Contains (e.Project.ParentSolution)) {
 						UpdateCommentTags (e.Project.ParentSolution, e.FileName, e.TagComments);
@@ -219,21 +222,21 @@ namespace MonoDevelop.Ide.Tasks
 				}
 			});
 		}
-		
+
 		void OnCommentTagsChanged (object sender, EventArgs e)
 		{
 			ReloadPriorities ();
 		}
-		
+
 		void UpdateCommentTags (Solution wob, FilePath fileName, IEnumerable<Tag> tagComments)
 		{
 			if (fileName == FilePath.Null)
 				return;
-			
+
 			fileName = fileName.FullPath;
-			
+
 			List<TaskListEntry> newTasks = new List<TaskListEntry> ();
-			if (tagComments != null) {  
+			if (tagComments != null) {
 				foreach (Tag tag in tagComments) {
 					TaskPriority priority;
 					string desc = tag.Text.Trim ();
@@ -252,13 +255,13 @@ namespace MonoDevelop.Ide.Tasks
 								desc = tag.Key + ": " + desc;
 						}
 					}
-					
+
 					TaskListEntry t = new TaskListEntry (fileName, desc, tag.Region.BeginColumn, tag.Region.BeginLine,
 					                   TaskSeverity.Information, priority, wob);
 					newTasks.Add (t);
 				}
 			}
-			
+
 			List<TaskListEntry> oldTasks = new List<TaskListEntry> (comments.GetFileTasks (fileName));
 
 			for (int i = 0; i < newTasks.Count; ++i) {
@@ -276,7 +279,7 @@ namespace MonoDevelop.Ide.Tasks
 					}
 				}
 			}
-			
+
 			comments.BeginTaskUpdates ();
 			try {
 				comments.AddRange (newTasks);
@@ -285,14 +288,14 @@ namespace MonoDevelop.Ide.Tasks
 				comments.EndTaskUpdates ();
 			}
 		}
-		
+
 		void ReloadPriorities ()
 		{
 			priorities.Clear ();
 			foreach (var tag in CommentTag.SpecialCommentTags)
 				priorities.Add (tag.Tag, (TaskPriority) tag.Priority);
-		}		
-		
+		}
+
 		void GeneratedTaskAdded (object sender, TaskEventArgs e)
 		{
 			foreach (TaskListEntry t in e.Tasks)
@@ -326,14 +329,14 @@ namespace MonoDevelop.Ide.Tasks
 			TreeIter iter;
 			if (!store.GetIterFirst (out iter))
 				return TreeIter.Zero;
-			
+
 			do {
 				TaskListEntry t = store.GetValue (iter, (int)Columns.Task) as TaskListEntry;
 				if (t == task)
 					return iter;
 			}
 			while (store.IterNext (ref iter));
-			
+
 			return TreeIter.Zero;
 		}
 
@@ -363,7 +366,7 @@ namespace MonoDevelop.Ide.Tasks
 				view.Selection != null &&
 				view.Selection.CountSelectedRows () > 0 &&
 				view.IsAColumnVisible ();
-			
+
 			menu.Show (view, evnt);
 		}
 
@@ -423,7 +426,7 @@ namespace MonoDevelop.Ide.Tasks
 								doc.Editor.ReplaceText (ls.Offset, ls.Length, line);
 								comments.Remove (task);
 							}
-						}); 
+						});
 					}
 				}
 			}
@@ -441,7 +444,7 @@ namespace MonoDevelop.Ide.Tasks
 					return lowPrioColor;
 			}
 		}
-		
+
 		static Gdk.Color StringToColor (string colorStr)
 		{
 			string[] rgb = colorStr.Substring (colorStr.IndexOf (':') + 1).Split ('/');
@@ -460,7 +463,7 @@ namespace MonoDevelop.Ide.Tasks
 			}
 			return color;
 		}
-		
+
 		void OnPropertyUpdated (object sender, EventArgs e)
 		{
 			highPrioColor = StringToColor (IdeApp.Preferences.UserTasksHighPrioColor);
@@ -477,17 +480,17 @@ namespace MonoDevelop.Ide.Tasks
 				} while (store.IterNext (ref iter));
 			}
 		}
-		
+
 		#region ITaskListView members
 		Control ITaskListView.Content {
 			get {
 				CreateView ();
-				return view; 
-			} 
+				return view;
+			}
 		}
-		
+
 		Control[] ITaskListView.ToolBarItems {
-			get { return null; } 
+			get { return null; }
 		}
 		#endregion
 	}

@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{B3E73DE7-8AFC-429A-9B68-5699B1E63A02}</ProjectGuid>
     <TargetFrameworkVersion>$(MDFrameworkVersion)</TargetFrameworkVersion>
-    <TemplatesVersion1x>1.0.0-beta2-20170430-208</TemplatesVersion1x>
+    <TemplatesVersion1x>1.0.0-beta2-20170629-269</TemplatesVersion1x>
     <TemplatesVersion20>1.0.0-beta2-20170727-301</TemplatesVersion20>
     <OutputPath>..\..\..\build\AddIns\AspNetCore</OutputPath>
   </PropertyGroup>
