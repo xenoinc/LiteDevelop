@@ -15,7 +15,8 @@ Picking up where MonoDevelop left off, the code base is beening refactored to co
 The following commitments are being made:
 
 * Compile .NET 6 on Linux
-* Unify tabs coding standards, using spaces instead of tabs.
+* Clean out stale branches (FINALLY!)
+* Unify coding standards, using spaces instead of tabs.
 * Merge in outstanding Pull Requests from MonoDevelop
 * Get a .DEB package
 * Rebranding Project:
@@ -30,7 +31,7 @@ To get started compiling the code:
 ```cmd
 git clone -b main https://github.com/xenoinc/litedevelop.git
 
-cd dotdevelop/
+cd LiteDevelop/
 
 ./configure --profile=gnome
 
