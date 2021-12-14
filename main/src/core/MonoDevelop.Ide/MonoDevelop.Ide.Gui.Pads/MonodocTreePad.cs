@@ -36,6 +36,9 @@ using MonoDevelop.Core;
 using MonoDevelop.Ide.Gui;
 using MonoDevelop.Projects;
 using MonoDevelop.Components;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Gui.Pads
 {
@@ -50,7 +53,7 @@ namespace MonoDevelop.Ide.Gui.Pads
 		public override string Id {
 			get { return "MonoDevelop.Ide.Gui.Pads.HelpTree"; }
 		}
-	
+
 		public HelpTree ()
 		{
 			tree_view = new MonoDevelop.Ide.Gui.Components.PadTreeView ();
@@ -58,15 +61,15 @@ namespace MonoDevelop.Ide.Gui.Pads
 			tree_view.AppendColumn ("name_col", tree_view.TextRenderer, "text", 0);
 			tree_view.RowExpanded += new Gtk.RowExpandedHandler (RowExpanded);
 			tree_view.RowActivated += RowActivated;
-			
+
 			store = new TreeStore (typeof (string), typeof (Node));
 			tree_view.Model = store;
 			tree_view.HeadersVisible = false;
-			
+
 			scroller = new MonoDevelop.Components.CompactScrolledWindow ();
 			scroller.ShadowType = Gtk.ShadowType.None;
 			scroller.Add (tree_view);
-			
+
 			if (IdeServices.HelpService.HelpTree != null) {
 				root_iter = store.AppendValues (GettextCatalog.GetString ("Mono Documentation"), IdeServices.HelpService.HelpTree);
 				PopulateNode (root_iter);
@@ -110,10 +113,10 @@ namespace MonoDevelop.Ide.Gui.Pads
 		{
 			Gtk.TreeIter iter;
 			Gtk.TreeModel model;
-				
+
 			if (tree_view.Selection.GetSelected (out model, out iter)) {
 				var path = store.GetPath (iter);
-					
+
 				if (path.Equals (store.GetPath (root_iter))) return;
 
 				if (store.IterHasChild (iter)) {

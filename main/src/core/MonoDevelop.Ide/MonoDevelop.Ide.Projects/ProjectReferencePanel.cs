@@ -1,23 +1,23 @@
-// 
+//
 // ProjectReferencePanel.cs
-//  
+//
 // Author:
 //       Todd Berman <tberman@sevenl.net>
 //       Lluis Sanchez Gual <lluis@novell.com>
-// 
+//
 // Copyright (c) 2004 Todd Berman
 // Copyright (c) 2009 Novell, Inc (http://www.novell.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,9 +36,12 @@ using MonoDevelop.Ide.Gui;
 using Gtk;
 using MonoDevelop.Core.Text;
 using MonoDevelop.Components;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects {
-	
+
 	internal class ProjectReferencePanel : VBox, IReferencePanel
 	{
 		SelectReferenceDialog selectDialog;
@@ -48,7 +51,7 @@ namespace MonoDevelop.Ide.Projects {
 		StringMatcher stringMatcher;
 		DotNetProject configureProject;
 		HashSet<string> selection = new HashSet<string> ();
-		
+
 		const int ColName = 0;
 		const int ColPath = 1;
 		const int ColProject = 2;
@@ -56,19 +59,19 @@ namespace MonoDevelop.Ide.Projects {
 		const int ColPixbuf = 4;
 		const int ColVisible = 5;
 		const int ColColor = 6;
-		
-		
+
+
 		public ProjectReferencePanel (SelectReferenceDialog selectDialog) : base (false, 6)
 		{
 			this.selectDialog = selectDialog;
-			
+
 			store = new ListStore (typeof (string), typeof (string), typeof(Project), typeof(bool), typeof(Xwt.Drawing.Image), typeof(bool), typeof(string));
 			store.SetSortFunc (0, CompareNodes);
 			treeView = new TreeView (store);
-			
+
 			TreeViewColumn firstColumn = new TreeViewColumn ();
 			TreeViewColumn secondColumn = new TreeViewColumn ();
-			
+
 			CellRendererToggle tog_render = new CellRendererToggle ();
 			tog_render.Xalign = 0;
 			tog_render.Toggled += new Gtk.ToggledHandler (AddReference);
@@ -80,24 +83,24 @@ namespace MonoDevelop.Ide.Projects {
 			CellRendererImage pix_render = new CellRendererImage ();
 			secondColumn.PackStart (pix_render, false);
 			secondColumn.AddAttribute (pix_render, "image", ColPixbuf);
-			
+
 			CellRendererText text_render = new CellRendererText ();
 			secondColumn.PackStart (text_render, true);
 			secondColumn.AddAttribute (text_render, "markup", ColName);
 			secondColumn.AddAttribute (text_render, "foreground", ColColor);
-			
+
 			treeView.AppendColumn (firstColumn);
 			treeView.AppendColumn (secondColumn);
 			treeView.AppendColumn (GettextCatalog.GetString ("Directory"), new CellRendererText (), "markup", ColPath);
-			
+
 			ScrolledWindow sc = new ScrolledWindow ();
 			sc.ShadowType = Gtk.ShadowType.In;
 			sc.Add (treeView);
 			PackStart (sc, true, true, 0);
-			
+
 			store.SetSortColumnId (0, SortType.Ascending);
 			ShowAll ();
-			
+
 			BorderWidth = 6;
 		}
 
@@ -112,7 +115,7 @@ namespace MonoDevelop.Ide.Projects {
 				Show ();
 			}
 		}
-		
+
 		public void SetFilter (string filter)
 		{
 			if (!string.IsNullOrEmpty (filter))
@@ -121,33 +124,33 @@ namespace MonoDevelop.Ide.Projects {
 				stringMatcher = null;
 			PopulateListView ();
 		}
-		
+
 		public void AddReference(object sender, Gtk.ToggledArgs e)
 		{
 			Gtk.TreeIter iter;
 			store.GetIterFromString (out iter, e.Path);
 			Project project = (Project) store.GetValue (iter, 2);
-			
+
 			if ((bool)store.GetValue (iter, ColSelected) == false) {
 				store.SetValue (iter, ColSelected, true);
 				selectDialog.AddReference (ProjectReference.CreateProjectReference (project));
-				
+
 			} else {
 				store.SetValue (iter, ColSelected, false);
 				selectDialog.RemoveReference(ReferenceType.Project, project.Name);
 			}
 		}
-		
+
 		public void SignalRefChange (ProjectReference pref, bool newstate)
 		{
 			if (pref.ReferenceType != ReferenceType.Project)
 				return;
-			
+
 			if (newstate)
 				selection.Add (pref.Reference);
 			else
 				selection.Remove (pref.Reference);
-			
+
 			string refLoc = pref.Reference;
 			Gtk.TreeIter looping_iter;
 			if (!store.GetIterFirst (out looping_iter))
@@ -163,8 +166,8 @@ namespace MonoDevelop.Ide.Projects {
 				}
 			} while (store.IterNext (ref looping_iter));
 		}
-		
-		int CompareNodes (Gtk.TreeModel model, Gtk.TreeIter a, Gtk.TreeIter b)
+
+		int CompareNodes (TreeModel model, Gtk.TreeIter a, Gtk.TreeIter b)
 		{
 			string s1 = (string) store.GetValue (a, 0);
 			string s2 = (string) store.GetValue (b, 0);
@@ -172,17 +175,17 @@ namespace MonoDevelop.Ide.Projects {
 			if (s2 == string.Empty) return -1;
 			return String.Compare (s1, s2, true);
 		}
-		
+
 		void PopulateListView ()
 		{
 			store.Clear ();
-			
+
 			Solution openSolution = configureProject.ParentSolution;
 			if (openSolution == null)
 				return;
-			
+
 			Dictionary<DotNetProject,bool> references = new Dictionary<DotNetProject, bool> ();
-			
+
 			foreach (Project projectEntry in openSolution.GetAllItems<Project>()) {
 
 				if (projectEntry == configureProject)
@@ -193,7 +196,7 @@ namespace MonoDevelop.Ide.Projects {
 
 				string txt;
 				int matchRank = 0;
-				
+
 				if (stringMatcher != null) {
 					if (!stringMatcher.CalcMatchRank (projectEntry.Name, out matchRank))
 						continue;
@@ -202,7 +205,7 @@ namespace MonoDevelop.Ide.Projects {
 				} else {
 					txt = GLib.Markup.EscapeText (projectEntry.Name);
 				}
-	
+
 				bool selected = selection.Contains (projectEntry.Name);
 				bool allowSelecting = true;
 				DotNetProject netProject = projectEntry as DotNetProject;
@@ -217,7 +220,7 @@ namespace MonoDevelop.Ide.Projects {
 						allowSelecting = false;
 					}
 				}
-				
+
 				var icon = ImageService.GetIcon (projectEntry.StockIcon, IconSize.Menu);
 				if (!allowSelecting) {
 					// Don't show unselectable projects if there is a filter
@@ -230,7 +233,7 @@ namespace MonoDevelop.Ide.Projects {
 					store.SetValue (it, ColColor, "dimgrey");
 			}
 		}
-		
+
 		internal static bool ProjectReferencesProject (Dictionary<DotNetProject,bool> references, HashSet<string> parentDeps,
 		                               DotNetProject project, string targetProject)
 		{
@@ -258,7 +261,7 @@ namespace MonoDevelop.Ide.Projects {
 					parentDeps.Add (pref.Name);
 					bool referencesTarget = ProjectReferencesProject (references, parentDeps, pref, targetProject);
 					parentDeps.Remove (pref.Name);
-					
+
 					if (referencesTarget) {
 						references [project] = true;
 						return true;

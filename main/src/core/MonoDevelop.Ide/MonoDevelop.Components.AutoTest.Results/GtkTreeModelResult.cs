@@ -28,6 +28,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using Gtk;
 using System.Linq;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Components.AutoTest.Results
 {
@@ -216,7 +219,7 @@ namespace MonoDevelop.Components.AutoTest.Results
 					child.PreviousSibling = previousSibling;
 					if (previousSibling != null)
 						previousSibling.NextSibling = child;
-					
+
 					newList.Add (child);
 					if (recursive) {
 						var childrenIter = FetchIterChildren (childIter, child, recursive);

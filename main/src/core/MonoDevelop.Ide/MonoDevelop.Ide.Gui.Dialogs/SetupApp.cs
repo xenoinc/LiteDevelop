@@ -29,7 +29,11 @@
 using System;
 using Mono.Addins;
 using Mono.Addins.Setup;
+#if GTK3
+using Mono.Addins.GuiGtk3;
+#else
 using Mono.Addins.Gui;
+#endif
 using MonoDevelop.Core;
 using System.Threading.Tasks;
 

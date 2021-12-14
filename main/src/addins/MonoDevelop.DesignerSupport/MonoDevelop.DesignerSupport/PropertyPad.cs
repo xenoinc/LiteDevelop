@@ -1,5 +1,5 @@
 //
-// PropertyPad.cs: The pad that holds the MD property grid. Can also 
+// PropertyPad.cs: The pad that holds the MD property grid. Can also
 //     hold custom grid widgets.
 //
 // Authors:
@@ -17,10 +17,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -44,86 +44,6 @@ using Gtk;
 
 namespace MonoDevelop.DesignerSupport
 {
-	class PropertyMacHostWidget : IPropertyGrid
-	{
-		public event EventHandler PropertyGridChanged;
-
-		readonly GtkNSViewHost host;
-
-		MacPropertyGrid view;
-
-		public string Name { get; set; }
-		public bool ShowHelp { get; set; } //not implemented
-		
-		public ShadowType ShadowType { get; set; } //not implemented
-		public Widget Widget => host;
-
-		public bool IsGridEditing => view.IsEditing;
-
-		public bool ShowToolbar {
-			get => view.ToolbarVisible;
-			set => view.ToolbarVisible = value;
-		}
-
-		public bool Sensitive {
-			get => view.Sensitive;
-			set => view.Sensitive = value;
-		}
-
-		public object CurrentObject {
-			get => view.CurrentObject;
-			set {
-				view.SetCurrentObject (value, new object [] { value });
-			}
-		}
-
-		public PropertyMacHostWidget ()
-		{
-			view = new MacPropertyGrid ();
-			host = new GtkNSViewHost (view);
-
-			view.PropertyGridChanged += View_PropertyGridChanged;
-		}
-
-		void View_PropertyGridChanged (object sender, EventArgs e)
-			=> PropertyGridChanged?.Invoke (this, e);
-
-		public void SetCurrentObject (object obj, object [] propertyProviders)
-			=> view.SetCurrentObject (obj, propertyProviders);
-
-		public void BlankPad () => view.BlankPad ();
-		public void Hide () => view.Hidden = true;
-		public void Show () => view.Hidden = false;
-
-		public void OnPadContentShown ()
-		{
-			//not implemented;
-		}
-
-		public void PopulateGrid (bool saveEditSession)
-		{
-			//view.SetCurrentObject (obj, propertyProviders);
-		}
-
-		public void SetToolbarProvider (object toolbarProvider)
-		{
-			//not implemented;
-		}
-
-		public void CommitPendingChanges ()
-		{
-			//not implemented;
-		}
-
-		public void Dispose ()
-		{
-			if (view != null) {
-				view.PropertyGridChanged -= View_PropertyGridChanged;
-				view.Dispose ();
-				view = null;
-			}
-		}
-	}
 
 	public interface IPropertyGrid : IPropertyPad
 	{
@@ -188,7 +108,7 @@ namespace MonoDevelop.DesignerSupport
 #if MAC
 			nativeWidget = new PropertyMacHostWidget ();
 #else
-			nativeWidget = new pg.PropertyGrid ();
+			nativeWidget = new PropertyXwtHostWidget ();
 #endif
 			nativeWidget.PropertyGridChanged += NativeWidget_PropertyGridChanged;
 		}
@@ -231,6 +151,9 @@ namespace MonoDevelop.DesignerSupport
 			nativeWidget.CommitPendingChanges ();
 	}
 
+	/// <summary>
+	/// The pad that holds the MD property grid. Can also  hold custom grid widgets.
+	/// </summary>
 	public class PropertyPad : PadContent, ICommandDelegator, IPropertyPad
 	{
 		public event EventHandler PropertyGridChanged;
@@ -278,17 +201,17 @@ namespace MonoDevelop.DesignerSupport
 			this.container = container;
 			DesignerSupport.Service.SetPad (this);
 		}
-		
+
 		internal IPadWindow PadWindow {
 			get { return container; }
 		}
-		
+
 #region AbstractPadContent implementations
-		
+
 		public override Control Control {
 			get { return frame; }
 		}
-		
+
 		public override void Dispose()
 		{
 #if MAC
@@ -297,13 +220,13 @@ namespace MonoDevelop.DesignerSupport
 				container.PadContentHidden -= Window_PadContentHidden;
 			}
 #endif
-			
+
 			propertyGridWrapper.PropertyGridChanged -= Grid_Changed;
 			propertyGridWrapper.Dispose ();
 			DesignerSupport.Service.SetPad (null);
 			base.Dispose ();
 		}
-		
+
 #endregion
 
 #region ICommandDelegatorRouter implementation
@@ -395,7 +318,7 @@ namespace MonoDevelop.DesignerSupport
 				widget.Visible = container.ContentVisible;
 			}
 		}
-		
+
 		void ClearToolbar ()
 		{
 			if (container != null) {
@@ -422,11 +345,11 @@ namespace MonoDevelop.DesignerSupport
 		DockItemToolbar tb;
 		List<Gtk.Widget> buttons = new List<Gtk.Widget> ();
 		bool visible = true;
-		
+
 		public DockToolbarProvider ()
 		{
 		}
-		
+
 		public void Attach (DockItemToolbar tb)
 		{
 			if (this.tb == tb)
@@ -440,20 +363,20 @@ namespace MonoDevelop.DesignerSupport
 					tb.Add (b);
 			}
 		}
-		
+
 #region IToolbarProvider implementation
 		public void Insert (Gtk.Widget w, int pos)
 		{
 			if (tb != null)
 				tb.Insert (w, pos);
-			
+
 			if (pos == -1)
 				buttons.Add (w);
 			else
 				buttons.Insert (pos, w);
 		}
-		
-		
+
+
 		public void ShowAll ()
 		{
 			if (tb != null)
@@ -463,15 +386,15 @@ namespace MonoDevelop.DesignerSupport
 					b.Show ();
 			}
 		}
-		
-		
+
+
 		public Gtk.Widget[] Children {
 			get {
 				return buttons.ToArray ();
 			}
 		}
-		
-		
+
+
 		public bool Visible {
 			get {
 				return visible;
@@ -482,7 +405,7 @@ namespace MonoDevelop.DesignerSupport
 					tb.Visible = value;
 			}
 		}
-		
+
 #endregion
 	}
 

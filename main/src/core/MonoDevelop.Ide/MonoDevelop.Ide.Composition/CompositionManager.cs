@@ -126,11 +126,14 @@ namespace MonoDevelop.Ide.Composition
 
 			// Try to use cached MEF data
 			using (timer) {
-				var canUse = metadata.ValidCache = caching.CanUse ();
-				if (canUse) {
-					LoggingService.LogInfo ("Creating MEF composition from cache");
-					RuntimeComposition = await TryCreateRuntimeCompositionFromCache (caching);
-				}
+
+			// oe NOTICE caching is NOT working... exception when trying to write cache.
+			//oe	var canUse = metadata.ValidCache = caching.CanUse ();
+			//oe	if (canUse) {
+			//oe		LoggingService.LogInfo ("Creating MEF composition from cache");
+			//oe		RuntimeComposition = await TryCreateRuntimeCompositionFromCache (caching);
+			//oe	}
+
 				metadata.Timings ["LoadFromCache"] = stepTimer.ElapsedMilliseconds;
 				stepTimer.Restart ();
 
@@ -199,6 +202,18 @@ namespace MonoDevelop.Ide.Composition
 
 				// For now while we're still transitioning to VSMEF it's useful to work
 				// even if the composition has some errors. TODO: re-enable this.
+
+var _errors = configuration.CompositionErrors.ToArray ();
+var _messages = _errors.SelectMany (e => e).Select (e => e.Message);
+var _text = string.Join (Environment.NewLine, _messages);
+Console.WriteLine( "" );
+Console.WriteLine( "" );
+Console.WriteLine( "oeDEBUG :: SOME MEF PROBLEMS:" );
+Console.WriteLine( _text );
+Console.WriteLine( "" );
+Console.WriteLine( "" );
+
+				// oe NOTICE : un-comment this to stop on any errors:
 				//configuration.ThrowOnErrors ();
 			}
 			timer?.Trace ("Composition configured");
@@ -213,16 +228,98 @@ namespace MonoDevelop.Ide.Composition
 		{
 			var readAssemblies = new HashSet<Assembly> ();
 
+
+
+			string[] extraLibraries = new [] {
+
+				"MonoDevelop.Ide",	// PlaformCatalog
+
+// oe NOTICE these are .dll names, but without the ".dll" extension...
+// oe NOTICE these are .dll names, but without the ".dll" extension...
+// oe NOTICE these are .dll names, but without the ".dll" extension...
+
+	"Microsoft.VisualStudio.Composition",
+	"Microsoft.VisualStudio.Composition.NetFxAttributes",
+	"Microsoft.VisualStudio.CoreUtility",
+	"Microsoft.VisualStudio.CoreUtilityImplementation",
+	"Microsoft.VisualStudio.ImageCatalog",
+	"Microsoft.VisualStudio.Imaging",
+	"Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime",
+	"Microsoft.VisualStudio.Language",
+	"Microsoft.VisualStudio.Language.Implementation",
+	"Microsoft.VisualStudio.Language.Intellisense",
+	"Microsoft.VisualStudio.Language.StandardClassification",
+	"Microsoft.VisualStudio.Language.Utilities",
+	"Microsoft.VisualStudio.Logic.Text.BufferUndoManager.Implementation",
+	"Microsoft.VisualStudio.Logic.Text.Classification.Aggregator.Implementation",
+	"Microsoft.VisualStudio.Logic.Text.Classification.LookUp.Implementation",
+	"Microsoft.VisualStudio.Logic.Text.Find.Implementation",
+	"Microsoft.VisualStudio.Logic.Text.Navigation.Implementation",
+	"Microsoft.VisualStudio.Logic.Text.Tagging.Aggregator.Implementation",
+	"Microsoft.VisualStudio.Text.BraceCompletion.Implementation",
+	"Microsoft.VisualStudio.Text.Data",
+	"Microsoft.VisualStudio.Text.Data.Utilities",
+	"Microsoft.VisualStudio.Text.Differencing.Implementation",
+	"Microsoft.VisualStudio.Text.EditorOptions.Implementation",
+	"Microsoft.VisualStudio.Text.Implementation.StandaloneUndo",
+	"Microsoft.VisualStudio.Text.Internal",
+	"Microsoft.VisualStudio.Text.Logic",
+	"Microsoft.VisualStudio.Text.Logic.Utilities",
+	"Microsoft.VisualStudio.Text.Model.Implementation",
+	"Microsoft.VisualStudio.Text.MultiCaret.Implementation",
+	"Microsoft.VisualStudio.Text.Outlining.Implementation",
+	"Microsoft.VisualStudio.Text.PatternMatching.Implementation",
+	"Microsoft.VisualStudio.Text.UI.Common",
+	"Microsoft.VisualStudio.Text.UI",
+	"Microsoft.VisualStudio.Text.UI.Gtk",
+	"Microsoft.VisualStudio.Text.UI.Gtk.Utilities",
+	"Microsoft.VisualStudio.Text.UI.Utilities",
+	"Microsoft.VisualStudio.Text.UI.Wpf",
+	"Microsoft.VisualStudio.Threading",
+	"Microsoft.VisualStudio.UI.Text.Commanding.Implementation",
+	"Microsoft.VisualStudio.UI.Text.EditorOperations.Implementation",
+	"Microsoft.VisualStudio.UI.Text.EditorPrimitives.Implementation",
+	"Microsoft.VisualStudio.Utilities",
+	"Microsoft.VisualStudio.Validation"
+
+			};
+
+			foreach (var asmName in extraLibraries) {
+
+Console.WriteLine( "oeDEBUG :: CompositionManager :: INIT-1 " + asmName );
+
+				try {
+					var asm = Assembly.Load (asmName);
+					if (asm == null)
+						continue;
+
+//	foreach ( Type t in asm.GetTypes() ) {
+//		Console.WriteLine( "oeDEBUG :: CompositionManager :: I1-type " + t.Name );
+//	}
+
+					readAssemblies.Add (asm);
+				} catch (Exception ex) {
+					LoggingService.LogError ("Error - can't load extra assembly: " + asmName, ex);
+				}
+			}
+
+
+
+Console.WriteLine( "oeDEBUG :: CompositionManager :: INIT-addins-start" );
 			timer?.Trace ("Start: reading assemblies");
 			ReadAssemblies (readAssemblies, "/MonoDevelop/Ide/TypeService/PlatformMefHostServices");
 			ReadAssemblies (readAssemblies, "/MonoDevelop/Ide/TypeService/MefHostServices");
 			ReadAssemblies (readAssemblies, "/MonoDevelop/Ide/Composition");
 			timer?.Trace ("Start: end reading assemblies");
+Console.WriteLine( "oeDEBUG :: CompositionManager :: INIT-addins-completed" );
 
 			return readAssemblies;
 
 			void ReadAssemblies (HashSet<Assembly> assemblies, string extensionPath)
 			{
+
+Console.WriteLine( "oeDEBUG :: ReadAssembliesFromAddins : from extensionPath " + extensionPath );
+
 				foreach (var node in AddinManager.GetExtensionNodes (extensionPath)) {
 					if (node is AssemblyExtensionNode assemblyNode) {
 						try {
@@ -234,6 +331,9 @@ namespace MonoDevelop.Ide.Composition
 							AddinManager.LoadAddin (null, id);
 
 							var assemblyFilePath = assemblyNode.Addin.GetFilePath (assemblyNode.FileName);
+
+Console.WriteLine( "oeDEBUG :: ReadAssembliesFromAddins " + assemblyFilePath );
+
 							var assembly = Runtime.LoadAssemblyFrom (assemblyFilePath);
 							assemblies.Add (assembly);
 						} catch (Exception e) {
@@ -265,6 +365,13 @@ namespace MonoDevelop.Ide.Composition
 				}
 
 				var text = GettextCatalog.GetString ("There was a problem loading one or more extensions and {0} needs to be restarted.", BrandingService.ApplicationName);
+
+// oeDEBUG print out more specific message.
+text += "\n";
+text += "message : " + message + "\n";
+text += "\n";
+text += "exception : " + e.ToString() + "\n";
+
 				var quitButton = new AlertButton (Strings.Quit);
 				var restartButton = new AlertButton (Strings.Restart);
 

@@ -30,6 +30,9 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Xml;
 using Gtk;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Components.AutoTest.Results
 {
@@ -338,7 +341,7 @@ namespace MonoDevelop.Components.AutoTest.Results
 				time = Gtk.Global.CurrentEventTime
 			};
 
-			IntPtr ptr = GLib.Marshaller.StructureToPtrAlloc (nativeEvent); 
+			IntPtr ptr = GLib.Marshaller.StructureToPtrAlloc (nativeEvent);
 			try {
 				Gdk.EventHelper.Put (new Gdk.EventKey (ptr));
 			} finally {

@@ -33,13 +33,16 @@ namespace MonoDevelop.Debugger.VSTextView.QuickInfo
 
 		void CurrentFrameChanged (object sender, EventArgs e)
 		{
+#if DD_Mac_TODO
 			if (window != null) {
 				DestroyWindow ();
 			}
+#endif
 		}
 
 		void TargetProcessExited (object sender, EventArgs e)
 		{
+#if DD_Mac_TODO
 			if (window == null)
 				return;
 
@@ -47,6 +50,7 @@ namespace MonoDevelop.Debugger.VSTextView.QuickInfo
 			if (debuggerSession == null || debuggerSession == sender) {
 				DestroyWindow ();
 			}
+#endif
 		}
 
 		public void Dispose ()
@@ -83,10 +87,10 @@ namespace MonoDevelop.Debugger.VSTextView.QuickInfo
 		{
 			if (DebuggingService.CurrentFrame == null)
 				return null;
-
+#if DD_Mac_TODO
 			if (window != null)
 				await Runtime.RunInMainThread (DestroyWindow);
-
+#endif
 			var view = session.TextView;
 			var textViewLines = view.TextViewLines;
 			var snapshot = textViewLines.FormattedSpan.Snapshot;
@@ -232,10 +236,12 @@ namespace MonoDevelop.Debugger.VSTextView.QuickInfo
 		void DestroyWindow ()
 		{
 			Runtime.AssertMainThread ();
+#if DD_Mac_TODO
 			if (window != null) {
 				window.Close ();
 				window = null;
 			}
+#endif
 			if (lastView != null) {
 				lastView.LayoutChanged -= LayoutChanged;
 #if CLOSE_ON_FOCUS_LOST

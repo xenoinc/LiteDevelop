@@ -160,7 +160,9 @@ namespace MonoDevelop.VersionControl.Views
 						if (nearestButton != null) {
 							nearestButton.Accessible.Focused = true;
 						} else {
+#if DD_VS_API_TODO
 							Accessible.SetCurrentFocus ();
+#endif
 						}
 					}
 				} catch (Exception e) {

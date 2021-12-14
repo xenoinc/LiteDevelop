@@ -13,10 +13,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -33,10 +33,13 @@ using MonoDevelop.Core;
 using MonoDevelop.Ide;
 using MonoDevelop.Components;
 using System.Runtime.CompilerServices;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Tasks
-{	
-	internal class UserTasksView : ITaskListView	
+{
+	internal class UserTasksView : ITaskListView
 	{
 		enum Columns
 		{
@@ -48,7 +51,7 @@ namespace MonoDevelop.Ide.Tasks
 			Bold,
 			Count
 		}
-		
+
 		Button newButton;
 		Button copyButton;
 		Button delButton;
@@ -57,9 +60,9 @@ namespace MonoDevelop.Ide.Tasks
 		ListStore store;
 		TreeModelSort sortModel;
 		CellRendererText cellRendDesc;
-		
+
 		Gdk.Color highPrioColor, normalPrioColor, lowPrioColor;
-		
+
 		Clipboard clipboard;
 		bool solutionLoaded = false;
 		bool updating;
@@ -84,10 +87,10 @@ namespace MonoDevelop.Ide.Tasks
 			highPrioColor = StringToColor (IdeApp.Preferences.UserTasksHighPrioColor);
 			normalPrioColor = StringToColor (IdeApp.Preferences.UserTasksNormalPrioColor);
 			lowPrioColor = StringToColor (IdeApp.Preferences.UserTasksLowPrioColor);
-			
+
 			store = new ListStore (
 				typeof (string),     // priority
-				typeof (bool),		 // completed 
+				typeof (bool),		 // completed
 				typeof (string),     // desc
 				typeof (TaskListEntry),	 // user task
 				typeof (Gdk.Color),  // foreground color
@@ -100,7 +103,7 @@ namespace MonoDevelop.Ide.Tasks
 			view.SearchColumn = (int)Columns.Description;
 			view.Selection.Changed += new EventHandler (SelectionChanged);
 			TreeViewColumn col;
-			
+
 			CellRendererComboBox cellRendPriority = new CellRendererComboBox ();
 			cellRendPriority.Values = priorities;
 			cellRendPriority.Editable = true;
@@ -108,7 +111,7 @@ namespace MonoDevelop.Ide.Tasks
 			col = view.AppendColumn (GettextCatalog.GetString ("Priority"), cellRendPriority, "text", Columns.Priority, "foreground-gdk", Columns.Foreground, "weight", Columns.Bold);
 			col.Resizable = true;
 			col.SortColumnId = (int)Columns.Priority;
-			
+
 			CellRendererToggle cellRendCompleted = new CellRendererToggle ();
 			cellRendCompleted.Toggled += new ToggledHandler (UserTaskCompletedToggled);
 			cellRendCompleted.Activatable = true;
@@ -121,12 +124,12 @@ namespace MonoDevelop.Ide.Tasks
 			col = view.AppendColumn (GettextCatalog.GetString ("Description"), cellRendDesc, "text", Columns.Description, "strikethrough", Columns.Completed, "foreground-gdk", Columns.Foreground, "weight", Columns.Bold);
 			col.Resizable = true;
 			col.SortColumnId = (int)Columns.Description;
-			
+
 			newButton = new Button ();
 			newButton.Label = GettextCatalog.GetString ("New Task");
 			newButton.Image = new ImageView (Gtk.Stock.New, IconSize.Menu);
 			newButton.Image.Show ();
-			newButton.Clicked += new EventHandler (NewUserTaskClicked); 
+			newButton.Clicked += new EventHandler (NewUserTaskClicked);
 			newButton.TooltipText = GettextCatalog.GetString ("Create New Task");
 
 			copyButton = new Button ();
@@ -135,21 +138,21 @@ namespace MonoDevelop.Ide.Tasks
 			copyButton.Image.Show ();
 			copyButton.Clicked += CopyUserTaskClicked;
 			copyButton.TooltipText = GettextCatalog.GetString ("Copy Task Description");
-			
+
 			delButton = new Button ();
 			delButton.Label = GettextCatalog.GetString ("Delete Task");
 			delButton.Image = new ImageView (Gtk.Stock.Delete, IconSize.Menu);
 			delButton.Image.Show ();
-			delButton.Clicked += new EventHandler (DeleteUserTaskClicked); 
+			delButton.Clicked += new EventHandler (DeleteUserTaskClicked);
 			delButton.TooltipText = GettextCatalog.GetString ("Delete Task");
 
 			IdeServices.TaskService.UserTasks.TasksChanged += UserTasksChanged;
 			IdeServices.TaskService.UserTasks.TasksAdded += UserTasksChanged;
 			IdeServices.TaskService.UserTasks.TasksRemoved += UserTasksChanged;
-			
+
 			if (IdeApp.Workspace.IsOpen)
 				solutionLoaded = true;
-			
+
 			IdeApp.Workspace.FirstWorkspaceItemOpened += CombineOpened;
 			IdeApp.Workspace.LastWorkspaceItemClosed += CombineClosed;
 
@@ -157,23 +160,23 @@ namespace MonoDevelop.Ide.Tasks
 			IdeApp.Preferences.UserTasksNormalPrioColor.Changed += OnPropertyUpdated;
 			IdeApp.Preferences.UserTasksHighPrioColor.Changed += OnPropertyUpdated;
 			ValidateButtons ();
-			
+
 			// Initialize with existing tags.
 			UserTasksChanged (this, null);
 		}
-		
+
 		void CombineOpened (object sender, EventArgs e)
 		{
 			solutionLoaded = true;
 			ValidateButtons ();
 		}
-		
+
 		void CombineClosed (object sender, EventArgs e)
 		{
 			solutionLoaded = true;
 			ValidateButtons ();
 		}
-		
+
 		void UserTasksChanged (object sender, TaskEventArgs e)
 		{
 			if (updating)
@@ -189,7 +192,7 @@ namespace MonoDevelop.Ide.Tasks
 			}
 			ValidateButtons ();
 		}
-		
+
 		void OnPropertyUpdated (object sender, EventArgs e)
 		{
 			highPrioColor = StringToColor (IdeApp.Preferences.UserTasksHighPrioColor);
@@ -206,18 +209,18 @@ namespace MonoDevelop.Ide.Tasks
 				} while (store.IterNext (ref iter));
 			}
 		}
-		
+
 		void SelectionChanged (object sender, EventArgs e)
 		{
 			ValidateButtons ();
 		}
-		
+
 		void ValidateButtons ()
 		{
 			newButton.Sensitive = solutionLoaded;
 			delButton.Sensitive = copyButton.Sensitive = solutionLoaded && view.Selection.CountSelectedRows () > 0;
 		}
-		
+
 		void NewUserTaskClicked (object obj, EventArgs e)
 		{
 			TaskListEntry task = new TaskListEntry ();
@@ -252,7 +255,7 @@ namespace MonoDevelop.Ide.Tasks
 			clipboard.Text = task.Description;
 		}
 
-		
+
 		void DeleteUserTaskClicked (object obj, EventArgs e)
 		{
 			if (view.Selection.CountSelectedRows () > 0)
@@ -293,7 +296,7 @@ namespace MonoDevelop.Ide.Tasks
 				IdeServices.TaskService.SaveUserTasks (task.WorkspaceObject);
 			}
 		}
-		
+
 		void UserTaskCompletedToggled (object o, ToggledArgs args)
 		{
 			Gtk.TreeIter iter, sortedIter;
@@ -308,7 +311,7 @@ namespace MonoDevelop.Ide.Tasks
 				IdeServices.TaskService.SaveUserTasks (task.WorkspaceObject);
 			}
 		}
-		
+
 		void UserTaskDescEdited (object o, EditedArgs args)
 		{
 			Gtk.TreeIter iter, sortedIter;
@@ -321,7 +324,7 @@ namespace MonoDevelop.Ide.Tasks
 				IdeServices.TaskService.SaveUserTasks (task.WorkspaceObject);
 			}
 		}
-		
+
 		Gdk.Color GetColorByPriority (TaskPriority prio)
 		{
 			switch (prio)
@@ -347,7 +350,7 @@ namespace MonoDevelop.Ide.Tasks
 				return SortType.Ascending;
 			}
 		}
-		
+
 		static Gdk.Color StringToColor (string colorStr)
 		{
 			string[] rgb = colorStr.Substring (colorStr.IndexOf (':') + 1).Split ('/');
@@ -366,7 +369,7 @@ namespace MonoDevelop.Ide.Tasks
 			}
 			return color;
 		}
-		
+
 		#region ITaskListView members
 		Control ITaskListView.Content { get { return view; } }
 		Control[] ITaskListView.ToolBarItems { get { return new Control[] { newButton, delButton, copyButton }; } }

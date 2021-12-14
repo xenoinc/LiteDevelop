@@ -1,10 +1,17 @@
 <Project>
-
+  <PropertyGroup>
+    <GtkBackend>GTK_SHARP</GtkBackend>
+  </PropertyGroup>
   <PropertyGroup>
     <ReferencesGtkCopyToOutput Condition="$(ReferencesGtkCopyToOutput) == ''">false</ReferencesGtkCopyToOutput>
+    <HaveGtkSharp>false</HaveGtkSharp>
+    <DefineConstants Condition="$(HaveGtkSharp)">$(DefineConstants);GTK3;GTK_SHARP</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="$(HaveGtkSharp)">
+    <PackageReference Include="GtkSharp" Version="3.22.25.98" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(HaveGtkSharp)">
     <Reference Include="atk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
       <Private>$(ReferencesGtkCopyToOutput)</Private>
     </Reference>
@@ -20,15 +27,17 @@
     <Reference Include="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
       <Private>$(ReferencesGtkCopyToOutput)</Private>
     </Reference>
-    <Reference Include="Mono.Cairo, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756">
-      <Private>$(ReferencesGtkCopyToOutput)</Private>
-    </Reference>
-    <Reference Include="Mono.Posix, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756">
-      <Private>$(ReferencesGtkCopyToOutput)</Private>
-    </Reference>
     <Reference Include="pango-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
       <Private>$(ReferencesGtkCopyToOutput)</Private>
     </Reference>
+    <Reference Include="Mono.Cairo" />
+  </ItemGroup>
+  <ItemGroup>
+    <!--   this should not be here: -->
+    <Reference Include="Mono.Posix, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756">
+      <Private>$(ReferencesGtkCopyToOutput)</Private>
+    </Reference>
+
   </ItemGroup>
 
 </Project>

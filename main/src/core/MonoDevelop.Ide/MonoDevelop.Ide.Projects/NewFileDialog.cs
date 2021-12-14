@@ -41,6 +41,9 @@ using System.Linq;
 using MonoDevelop.Components;
 using MonoDevelop.Components.AutoTest;
 using System.ComponentModel;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects
 {
@@ -301,12 +304,12 @@ namespace MonoDevelop.Ide.Projects
 
 			if (!boxProject.Visible || projectAddCheckbox.Active)
 				project = parentProject;
-			
+
 			var templates = FileTemplate.GetFileTemplates (project, basePath);
 
 			// stable sort, to ensure the template ordering is maintained among templates with the same name
 			templates = templates.OrderBy(t => t.Name).ToList();
-			
+
 			foreach (var template in templates) {
 				List<string> langs = template.GetCompatibleLanguages (project, basePath);
 				if (langs != null) {
@@ -403,18 +406,18 @@ namespace MonoDevelop.Ide.Projects
 			if (templateItem != null)
 				iconView.CurrentlySelected = templateItem;
 		}
-		
+
 		void SelectedTemplateChanged (object sender, EventArgs e)
 		{
 			FileTemplate template = iconView.CurrentlySelected != null ? iconView.CurrentlySelected.Template : null;
-			
+
 			if (template != null) {
 				labelTemplateTitle.Markup = "<b>" + template.Name + "</b>";
 				infoLabel.Text = template.Description;
-				
+
 				string filename = GetFileNameFromEntry ();
 				string name = null;
-				
+
 				// Desensitize the text entry if the name is fixed.
 				// Be careful to store user-entered text so we can replace it if they change their selection
 				if (template.IsFixedFilename) {
@@ -429,13 +432,13 @@ namespace MonoDevelop.Ide.Projects
 					}
 					nameEntry.Sensitive = true;
 				}
-				
+
 				// Fill in a default name if text entry is empty or contains a default name
 				if (string.IsNullOrEmpty (filename) || previousDefaultEntryText == filename) {
 					previousDefaultEntryText = template.DefaultFilename;
 					name = template.DefaultFilename;
 				}
-				
+
 				if (name != null) {
 					// Note: this will cause UpdateOkStatus() to be invoked via the Gtk.Entry.Changed event.
 					nameEntry.Text = name;
@@ -458,23 +461,23 @@ namespace MonoDevelop.Ide.Projects
 		{
 			return nameEntry.Text.Trim ();
 		}
-		
+
 		void UpdateOkStatus ()
 		{
 			try {
 				FileTemplate template = iconView.CurrentlySelected != null ? iconView.CurrentlySelected.Template : null;
-				
+
 				if (template != null) {
 					string language = iconView.CurrentlySelected.Language;
 					string filename = GetFileNameFromEntry ();
 					Project project = null;
 					string path = null;
-					
+
 					if (!boxProject.Visible || projectAddCheckbox.Active) {
 						project = parentProject;
 						path = basePath;
 					}
-					
+
 					if (projectAddCheckbox.Active) {
 						okButton.Sensitive = template.IsValidName (filename, language);
 					} else {
@@ -593,7 +596,7 @@ namespace MonoDevelop.Ide.Projects
 			projectFolderEntry.Sensitive = projectAddCheckbox.Active;
 
 			TemplateItem titem = (TemplateItem)iconView.CurrentlySelected;
-			
+
 			if (projectAddCheckbox.Active) {
 				AddToProjectComboChanged (null, null);
 			} else {
@@ -611,7 +614,7 @@ namespace MonoDevelop.Ide.Projects
 		{
 			int which = projectAddCombo.Active;
 			Project project = null;
-			
+
 			try {
 				project = projectRefs[which];
 			} catch (IndexOutOfRangeException) { }
@@ -638,7 +641,7 @@ namespace MonoDevelop.Ide.Projects
 			iconView = new TemplateView ();
 			iconView.ShowAll ();
 			boxTemplates.PackStart (iconView, true, true, 0);
-			
+
 			catStore = new TreeStore (typeof(string), typeof(List<Category>), typeof(List<TemplateItem>));
 
 			TreeViewColumn treeViewColumn = new TreeViewColumn ();
@@ -660,7 +663,7 @@ namespace MonoDevelop.Ide.Projects
 
 			infoLabel.Text = string.Empty;
 			labelTemplateTitle.Text = string.Empty;
-			
+
 			Project[] projects = null;
 			if (parentProject == null && parentSolutionFolder == null)
 				projects = IdeApp.Workspace.GetAllProjects ().ToArray ();
@@ -725,8 +728,8 @@ namespace MonoDevelop.Ide.Projects
 				labelTemplateTitle.WidthRequest = scrolledInfo.Allocation.Width;
 			}
 		}
-		
-		
+
+
 		class Category
 		{
 			List<Category> categories = new List<Category> ();
@@ -760,11 +763,11 @@ namespace MonoDevelop.Ide.Projects
 				set { hasSelectedTemplate = value; }
 			}
 		}
-		
+
 		class TemplateView: ScrolledWindow
 		{
 			TemplateTreeView tree;
-			
+
 			public TemplateView ()
 			{
 				tree = new TemplateTreeView ();
@@ -782,30 +785,30 @@ namespace MonoDevelop.Ide.Projects
 				ShadowType = ShadowType.In;
 				ShowAll ();
 			}
-			
+
 			public TemplateItem CurrentlySelected {
 				get { return tree.CurrentlySelected; }
 				set { tree.CurrentlySelected = value; }
 			}
-			
+
 			public void Add (TemplateItem templateItem)
 			{
 				tree.Add (templateItem);
 			}
-			
+
 			public void Clear ()
 			{
 				tree.Clear ();
 			}
-			
+
 			public event EventHandler SelectionChanged;
 			public event EventHandler DoubleClicked;
 		}
-			
+
 		class TemplateTreeView: TreeView
 		{
 			Gtk.ListStore templateStore;
-			
+
 			public TemplateTreeView ()
 			{
 				HeadersVisible = false;
@@ -815,22 +818,22 @@ namespace MonoDevelop.Ide.Projects
 
 				SemanticModelAttribute modelAttr = new SemanticModelAttribute ("templateStore__Icon", "templateStore__Name", "templateStore__Template");
 				TypeDescriptor.AddAttributes (templateStore, modelAttr);
-				
+
 				TreeViewColumn col = new TreeViewColumn ();
 				CellRendererImage crp = new CellRendererImage ();
 				crp.StockSize = Gtk.IconSize.Dnd;
 				crp.Ypad = 2;
 				col.PackStart (crp, false);
 				col.AddAttribute (crp, "stock-id", 0);
-				
+
 				CellRendererText crt = new CellRendererText ();
 				col.PackStart (crt, false);
 				col.AddAttribute (crt, "markup", 1);
-				
+
 				AppendColumn (col);
 				ShowAll ();
 			}
-			
+
 			public TemplateItem CurrentlySelected {
 				get {
 					Gtk.TreeIter iter;
@@ -851,7 +854,7 @@ namespace MonoDevelop.Ide.Projects
 					}
 				}
 			}
-			
+
 			public void Add (TemplateItem templateItem)
 			{
 				string name = GLib.Markup.EscapeText (templateItem.Name);
@@ -860,7 +863,7 @@ namespace MonoDevelop.Ide.Projects
 				string icon = templateItem.Template.Icon;
 				templateStore.AppendValues (string.IsNullOrEmpty (icon) ? "md-file-source" : icon, name, templateItem);
 			}
-			
+
 			public void Clear ()
 			{
 				templateStore.Clear ();

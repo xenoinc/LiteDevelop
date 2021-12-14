@@ -30,7 +30,7 @@ namespace MonoDevelop.Ide.Text
     /// This class is intended to be a very simple ITextUndoHistoryRegistry implementation for hosts that
     /// don't have a built-in undo mechanism
     /// </summary>
-    [Export(typeof(ITextUndoHistoryRegistry))]
+//oe    [Export(typeof(ITextUndoHistoryRegistry))]	oe NOTICE prevent multiple export of this type; WHICH ONE SHOULD BE USED???
     internal sealed class TextUndoHistoryRegistry : ITextUndoHistoryRegistry
     {
         private readonly ConditionalWeakTable<object, ITextUndoHistory> _map = new ConditionalWeakTable<object, ITextUndoHistory>();

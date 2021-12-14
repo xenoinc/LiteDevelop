@@ -228,7 +228,7 @@ namespace MonoDevelop.Components.DockNotebook
 					QueueDraw ();
 				}
 			};
-			
+
 			foreach (var tab in notebook.Tabs) {
 				if (tab.Accessible != null) {
 					Accessible.AddAccessibleElement (tab.Accessible);
@@ -1178,7 +1178,7 @@ namespace MonoDevelop.Components.DockNotebook
 			var closeButtonAlloation = new Cairo.Rectangle (tabBounds.Right - rightPadding - (tabCloseImage.Width / 2) - CloseButtonMarginRight,
 			                                 tabBounds.Height - bottomPadding - tabCloseImage.Height - CloseButtonMarginBottom,
 			                                 tabCloseImage.Width, tabCloseImage.Height);
-			
+
 			tab.CloseButtonActiveArea = closeButtonAlloation.Inflate (2, 2);
 
 			var spinButtonX = closeButtonAlloation.X - Math.Max (tabPinnedImage.Width + CloseButtonMarginRight, rightPadding);
@@ -1201,7 +1201,7 @@ namespace MonoDevelop.Components.DockNotebook
 
 			if (drawCloseButton)
 				ctx.DrawImage (this, tabCloseImage.WithAlpha ((closeButtonHovered ? 1.0 : 0.5) * tab.Opacity), closeButtonAlloation.X, closeButtonAlloation.Y);
-			
+
 			if (drawPinButton)
 				ctx.DrawImage (this, (tab.IsPinned ? tabPinnedImage : tabUnPinnedImage).WithAlpha ((pinButtonHovered ? 1.0 : 0.5) * tab.Opacity), spinButtonAllocation.X, spinButtonAllocation.Y);
 
@@ -1218,7 +1218,7 @@ namespace MonoDevelop.Components.DockNotebook
 			double ty = tabBounds.Height - bottomPadding - baseline;
 
 			ctx.MoveTo (tx, ty);
-			if (!MonoDevelop.Core.Platform.IsMac && !MonoDevelop.Core.Platform.IsWindows) {
+			if (MonoDevelop.Core.Platform.IsLinux) {
 				// This is a work around for a linux specific problem.
 				// A bug in the proprietary ATI driver caused TAB text not to draw.
 				// If that bug get's fixed remove this HACK asap.

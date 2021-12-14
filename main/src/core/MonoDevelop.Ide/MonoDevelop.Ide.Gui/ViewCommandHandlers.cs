@@ -13,10 +13,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -49,18 +49,18 @@ namespace MonoDevelop.Ide.Gui
 			window = doc.Window;
 			this.doc = doc;
 		}
-		
+
 		public T GetContent <T>() where T : class
 		{
 			return doc.GetContent<T> (true);
 		}
-		
+
 		[CommandHandler (FileCommands.Save)]
 		protected void OnSaveFile ()
 		{
 			doc.Save ();
 		}
-		
+
 		[CommandUpdateHandler (FileCommands.Save)]
 		protected void OnUpdateSaveFile (CommandInfo info)
 		{
@@ -72,13 +72,13 @@ namespace MonoDevelop.Ide.Gui
 		{
 			doc.SaveAs ();
 		}
-		
+
 		[CommandUpdateHandler (FileCommands.SaveAs)]
 		protected void OnUpdateSaveFileAs (CommandInfo info)
 		{
 			info.Enabled = doc.IsFile && !doc.IsViewOnly;
 		}
-		
+
 		[CommandHandler (FileCommands.ReloadFile)]
 		protected void OnReloadFile ()
 		{
@@ -87,7 +87,7 @@ namespace MonoDevelop.Ide.Gui
 			                                GettextCatalog.GetString ("All changes made to the document will be permanently lost."), 0, AlertButton.Cancel, AlertButton.Revert) == AlertButton.Revert)
 				doc.Reload ();
 		}
-		
+
 		[CommandUpdateHandler (FileCommands.ReloadFile)]
 		protected void OnUpdateReloadFile (CommandInfo info)
 		{
@@ -101,7 +101,7 @@ namespace MonoDevelop.Ide.Gui
 			FilePath path = Path.GetDirectoryName (doc.FileName);
 			IdeServices.DesktopService.OpenFolder (path, doc.FileName);
 		}
-		
+
 		[CommandUpdateHandler (FileCommands.OpenContainingFolder)]
 		protected void OnUpdateOpenFolder (CommandInfo info)
 		{
@@ -109,9 +109,9 @@ namespace MonoDevelop.Ide.Gui
 			info.Enabled = info.Visible;
 		}
 
-		
+
 		/*** Edit commands ***/
-		
+
 		[CommandHandler (EditCommands.Undo)]
 		protected void OnUndo ()
 		{
@@ -119,14 +119,14 @@ namespace MonoDevelop.Ide.Gui
 			if (editable != null)
 				editable.Undo();
 		}
-		
+
 		[CommandUpdateHandler (EditCommands.Undo)]
 		protected void OnUpdateUndo (CommandInfo info)
 		{
 			IUndoHandler textBuffer = GetContent <IUndoHandler> ();
 			info.Enabled = textBuffer != null && textBuffer.EnableUndo;
 		}
-		
+
 		[CommandHandler (EditCommands.Redo)]
 		protected void OnRedo ()
 		{
@@ -135,14 +135,14 @@ namespace MonoDevelop.Ide.Gui
 				editable.Redo();
 			}
 		}
-		
+
 		[CommandUpdateHandler (EditCommands.Redo)]
 		protected void OnUpdateRedo (CommandInfo info)
 		{
 			IUndoHandler textBuffer = GetContent <IUndoHandler> ();
 			info.Enabled = textBuffer != null && textBuffer.EnableRedo;
 		}
-		
+
 		[CommandHandler (EditCommands.Cut)]
 		protected void OnCut ()
 		{
@@ -150,7 +150,7 @@ namespace MonoDevelop.Ide.Gui
 			if (handler != null)
 				handler.Cut ();
 		}
-		
+
 		[CommandUpdateHandler (EditCommands.Cut)]
 		protected void OnUpdateCut (CommandInfo info)
 		{
@@ -165,7 +165,7 @@ namespace MonoDevelop.Ide.Gui
 			else
 				info.Bypass = true;
 		}
-		
+
 		[CommandHandler (EditCommands.Copy)]
 		protected void OnCopy ()
 		{
@@ -173,7 +173,7 @@ namespace MonoDevelop.Ide.Gui
 			if (handler != null)
 				handler.Copy ();
 		}
-		
+
 		[CommandUpdateHandler (EditCommands.Copy)]
 		protected void OnUpdateCopy (CommandInfo info)
 		{
@@ -188,7 +188,7 @@ namespace MonoDevelop.Ide.Gui
 			else
 				info.Bypass = true;
 		}
-		
+
 		[CommandHandler (EditCommands.Paste)]
 		protected void OnPaste ()
 		{
@@ -196,7 +196,7 @@ namespace MonoDevelop.Ide.Gui
 			if (handler != null)
 				handler.Paste ();
 		}
-		
+
 		[CommandUpdateHandler (EditCommands.Paste)]
 		protected void OnUpdatePaste (CommandInfo info)
 		{
@@ -211,7 +211,7 @@ namespace MonoDevelop.Ide.Gui
 			else
 				info.Bypass = true;
 		}
-		
+
 		[CommandHandler (EditCommands.Delete)]
 		protected void OnDelete ()
 		{
@@ -219,7 +219,7 @@ namespace MonoDevelop.Ide.Gui
 			if (handler != null)
 				handler.Delete ();
 		}
-		
+
 		[CommandUpdateHandler (EditCommands.Delete)]
 		protected void OnUpdateDelete (CommandInfo info)
 		{
@@ -229,7 +229,7 @@ namespace MonoDevelop.Ide.Gui
 			else
 				info.Bypass = true;
 		}
-		
+
 		[CommandHandler (EditCommands.SelectAll)]
 		protected void OnSelectAll ()
 		{
@@ -237,7 +237,7 @@ namespace MonoDevelop.Ide.Gui
 			if (handler != null)
 				handler.SelectAll ();
 		}
-		
+
 		[CommandUpdateHandler (EditCommands.SelectAll)]
 		protected void OnUpdateSelectAll (CommandInfo info)
 		{
@@ -252,14 +252,14 @@ namespace MonoDevelop.Ide.Gui
 			else
 				info.Bypass = true;
 		}
-		
+
 		[CommandHandler (EditCommands.UppercaseSelection)]
 		public void OnUppercaseSelection ()
 		{
 			var buffer = GetContent <TextEditor> ();
 			if (buffer == null)
 				return;
-			
+
 			string selectedText = buffer.SelectedText;
 			if (string.IsNullOrEmpty (selectedText)) {
 				int pos = buffer.CaretOffset;
@@ -286,21 +286,21 @@ namespace MonoDevelop.Ide.Gui
 				}
 			}
 		}
-		
+
 		[CommandUpdateHandler (EditCommands.UppercaseSelection)]
 		protected void OnUppercaseSelection (CommandInfo info)
 		{
 			var buffer = GetContent <TextEditor> ();
 			info.Enabled = buffer != null;
 		}
-		
+
 		[CommandHandler (EditCommands.LowercaseSelection)]
 		public void OnLowercaseSelection ()
 		{
 			var buffer = GetContent <TextEditor> ();
 			if (buffer == null)
 				return;
-			
+
 			string selectedText = buffer.SelectedText;
 			if (string.IsNullOrEmpty (selectedText)) {
 				int pos = buffer.CaretOffset;
@@ -327,17 +327,17 @@ namespace MonoDevelop.Ide.Gui
 				}
 			}
 		}
-		
+
 		[CommandUpdateHandler (EditCommands.LowercaseSelection)]
 		protected void OnLowercaseSelection (CommandInfo info)
 		{
 			var buffer = GetContent <TextEditor> ();
 			info.Enabled = buffer != null;
 		}
-		
+
 
 		// Text editor commands
-		
+
 		[CommandUpdateHandler (TextEditorCommands.CharLeft)]
 		[CommandUpdateHandler (TextEditorCommands.CharRight)]
 		[CommandUpdateHandler (TextEditorCommands.DeleteLeftChar)]
@@ -355,98 +355,98 @@ namespace MonoDevelop.Ide.Gui
 			// editor commands.
 			info.Bypass = doc.Editor?.HasFocus == false;
 		}
-		
+
 		[CommandHandler (TextEditorCommands.LineEnd)]
 		protected void OnLineEnd ()
 		{
 			doc.Editor.EditorOperations.MoveToEndOfLine (false);
 		}
-		
+
 		[CommandHandler (TextEditorCommands.LineStart)]
 		protected void OnLineStart ()
 		{
 			doc.Editor.EditorOperations.MoveToStartOfLine (false);
 		}
-		
+
 		[CommandHandler (TextEditorCommands.DeleteLeftChar)]
 		protected void OnDeleteLeftChar ()
 		{
 			doc.Editor.EditorOperations.Backspace ();
 		}
-		
+
 		[CommandHandler (TextEditorCommands.DeleteRightChar)]
 		protected void OnDeleteRightChar ()
 		{
 			doc.Editor.EditorOperations.Delete ();
 		}
-		
+
 		[CommandHandler (TextEditorCommands.CharLeft)]
 		protected void OnCharLeft ()
 		{
 			doc.Editor.EditorOperations.MoveToPreviousCharacter (false);
 		}
-		
+
 		[CommandHandler (TextEditorCommands.CharRight)]
 		protected void OnCharRight ()
 		{
 			doc.Editor.EditorOperations.MoveToNextCharacter (false);
 		}
-		
+
 		[CommandHandler (TextEditorCommands.LineUp)]
 		protected void OnLineUp ()
 		{
 			doc.Editor.EditorOperations.MoveLineUp (false);
 		}
-		
+
 		[CommandHandler (TextEditorCommands.LineDown)]
 		protected void OnLineDown ()
 		{
 			doc.Editor.EditorOperations.MoveLineDown (false);
 		}
-		
+
 		[CommandHandler (TextEditorCommands.DocumentStart)]
 		protected void OnDocumentStart ()
 		{
 			doc.Editor.EditorOperations.MoveToStartOfDocument (false);
 		}
-		
+
 		[CommandHandler (TextEditorCommands.DocumentEnd)]
 		protected void OnDocumentEnd ()
 		{
 			doc.Editor.EditorOperations.MoveToEndOfDocument (false);
 		}
-		
+
 		[CommandHandler (TextEditorCommands.DeleteLine)]
 		protected void OnDeleteLine ()
 		{
 			var line = doc.Editor.GetLine (doc.Editor.CaretLocation.Line);
 			doc.Editor.RemoveText (line.Offset, line.LengthIncludingDelimiter);
 		}
-		
+
 		struct RemoveInfo
 		{
 			public int Position { get; set; }
 			public int Length { get; set; }
 
 			public static readonly RemoveInfo Empty = new RemoveInfo (-1, -1);
-			
+
 			public bool IsEmpty {
 				get {
 					return Length <= 0;
 				}
 			}
-			
+
 			RemoveInfo (int position, int length): this ()
 			{
 				Position = position;
 				Length = length;
 			}
 
-			public static bool IsWhiteSpace (char ch) 
+			public static bool IsWhiteSpace (char ch)
 			{
 				return ch == ' ' || ch == '\t' || ch == '\v';
 			}
-			
+
 			public static RemoveInfo GetRemoveInfo (TextEditor document, ref int pos)
 			{
 				int len = 0;
@@ -466,20 +466,20 @@ namespace MonoDevelop.Ide.Gui
 				return string.Format ("[RemoveInfo: Position={0}, Length={1}]", Position, Length);
 			}
 		}
-		
+
 		[CommandHandler (EditCommands.RemoveTrailingWhiteSpaces)]
 		public void OnRemoveTrailingWhiteSpaces ()
 		{
 			var data = doc.Editor;
 			if (data == null)
 				return;
-			
+
 			System.Collections.Generic.List<RemoveInfo> removeList = new System.Collections.Generic.List<RemoveInfo> ();
 			int pos = data.Length - 1;
 			RemoveInfo removeInfo = RemoveInfo.GetRemoveInfo (data, ref pos);
 			if (!removeInfo.IsEmpty)
 				removeList.Add (removeInfo);
-			
+
 			while (pos >= 0) {
 				char ch = data.GetCharAt (pos);
 				if (ch == '\n' || ch == '\r') {
@@ -498,13 +498,13 @@ namespace MonoDevelop.Ide.Gui
 				}
 			}
 		}
-		
+
 		[CommandUpdateHandler (EditCommands.RemoveTrailingWhiteSpaces)]
 		protected void OnRemoveTrailingWhiteSpaces (CommandInfo info)
 		{
 			info.Enabled = GetContent <TextEditor> () != null;
 		}
-		
+
 		#region Folding
 		bool IsFoldMarkerMarginEnabled {
 			get {
@@ -525,11 +525,12 @@ namespace MonoDevelop.Ide.Gui
 			info.Enabled = info.Visible = false;
 #else
 			info.Text = IsFoldMarkerMarginEnabled ? GettextCatalog.GetString ("Disable _Folding") : GettextCatalog.GetString ("Enable _Folding");
-			info.Enabled = GetContent<IFoldable> () != null ||
-				GetContent<Microsoft.VisualStudio.Text.Editor.ITextView> () != null;
-			// As we need to support both the new and the legacy editor, we need to check if perhaps
-			// we are running in the new one. The legacy editor already implements <see cref="ITextView"/>
-			// so we can't simply look for that and we do not want to import anything related to Cocoa. 
+		//oe	info.Enabled = GetContent<IFoldable> () != null ||
+		//oe		GetContent<Microsoft.VisualStudio.Text.Editor.ITextView3> () != null;
+		//oe	// As we need to support both the new and the legacy editor, we need to check if perhaps
+		//oe	// we are running in the new one. The legacy editor already implements <see cref="ITextView"/>
+		//oe	// so we can't simply look for that and we do not want to import anything related to Cocoa.
+			info.Enabled = GetContent<IFoldable> () != null;
 #endif
 		}
 
@@ -540,13 +541,13 @@ namespace MonoDevelop.Ide.Gui
 		{
 			info.Enabled = GetContent <IFoldable> () != null && IsFoldMarkerMarginEnabled;
 		}
-		
+
 		[CommandHandler (EditCommands.ToggleAllFoldings)]
 		protected void ToggleAllFoldings ()
 		{
 			GetContent <IFoldable> ().ToggleAllFoldings ();
 		}
-		
+
 		[CommandHandler (EditCommands.FoldDefinitions)]
 		protected void FoldDefinitions ()
 		{
@@ -558,9 +559,9 @@ namespace MonoDevelop.Ide.Gui
 		{
 			GetContent <IFoldable> ().ToggleFolding ();
 		}
-		
+
 		#endregion
-		
+
 		#region Bookmarks
 		[CommandUpdateHandler (SearchCommands.ToggleBookmark)]
 		[CommandUpdateHandler (SearchCommands.PrevBookmark)]
@@ -570,7 +571,7 @@ namespace MonoDevelop.Ide.Gui
 		{
 			info.Enabled = GetContent <IBookmarkBuffer> () != null;
 		}
-		
+
 		[CommandHandler (SearchCommands.ToggleBookmark)]
 		public void ToggleBookmark ()
 		{
@@ -579,7 +580,7 @@ namespace MonoDevelop.Ide.Gui
 			int position = markBuffer.CursorPosition;
 			markBuffer.SetBookmarked (position, !markBuffer.IsBookmarked (position));
 		}
-		
+
 		[CommandHandler (SearchCommands.PrevBookmark)]
 		public void PrevBookmark ()
 		{
@@ -587,7 +588,7 @@ namespace MonoDevelop.Ide.Gui
 			Debug.Assert (markBuffer != null);
 			markBuffer.PrevBookmark ();
 		}
-		
+
 		[CommandHandler (SearchCommands.NextBookmark)]
 		public void NextBookmark ()
 		{
@@ -595,7 +596,7 @@ namespace MonoDevelop.Ide.Gui
 			Debug.Assert (markBuffer != null);
 			markBuffer.NextBookmark ();
 		}
-		
+
 		[CommandHandler (SearchCommands.ClearBookmarks)]
 		public void ClearBookmarks ()
 		{
@@ -604,6 +605,6 @@ namespace MonoDevelop.Ide.Gui
 			markBuffer.ClearBookmarks ();
 		}
 		#endregion
-		
+
 	}
 }

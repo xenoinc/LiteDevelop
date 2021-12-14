@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using MonoDevelop.Core;
 
 #if MAC
 using AppKit;
@@ -209,14 +210,18 @@ namespace MonoDevelop.Components.AtkCocoaHelper
 				return;
 			}
 
-			HandleSignalAttachment ((signal, handler) => signal.AddDelegate (handler));
+			if (Platform.IsMac) {
+				HandleSignalAttachment ((signal, handler) => signal.AddDelegate (handler));
+			}
 		}
 
 		void WidgetDestroyed (object sender, EventArgs e)
 		{
 			FreeActions ();
+			if (Platform.IsMac) {
+				HandleSignalAttachment ((signal, handler) => signal.RemoveDelegate (handler));
+			}
 
-			HandleSignalAttachment ((signal, handler) => signal.RemoveDelegate (handler));
 			owner = null;
 		}
 

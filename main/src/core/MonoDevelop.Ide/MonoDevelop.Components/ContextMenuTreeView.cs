@@ -1,21 +1,21 @@
-// 
+//
 // ContextMenuTreeView.cs
-//  
+//
 // Author:
 //       Michael Hutchinson <mhutch@xamarin.com>
-// 
+//
 // Copyright (c) 2011 Xamarin Inc. (http://xamarin.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,6 +25,11 @@
 // THE SOFTWARE.
 using System;
 using MonoDevelop.Components.AtkCocoaHelper;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#else
+using TreeModel = Gtk.TreeModel;
+#endif
 
 namespace MonoDevelop.Components
 {
@@ -40,7 +45,7 @@ namespace MonoDevelop.Components
 			ActionHandler.PerformShowMenu += PerformShowMenu;
 		}
 
-		public ContextMenuTreeView (Gtk.TreeModel model) : base (model)
+		public ContextMenuTreeView (TreeModel model) : base (model)
 		{
 		}
 
@@ -51,7 +56,7 @@ namespace MonoDevelop.Components
 
 		// Workaround for Bug 31712 - Solution pad doesn't refresh properly after resizing application window
 		// If the treeview size is modified while the pad is unrealized (autohidden), the treeview
-		// doesn't update its internal vertical offset. This can lead to items becoming offset outside the 
+		// doesn't update its internal vertical offset. This can lead to items becoming offset outside the
 		// visible area and therefore becoming unreachable. The only way to force the treeview to recalculate
 		// this offset is by setting the Vadjustment.Value, but it ignores values the same as the current value.
 		// Therefore we simply set it to something slightly different then back again.
@@ -130,12 +135,12 @@ namespace MonoDevelop.Components
 			if (!this.IsClickedNodeSelected ((int)evnt.X, (int)evnt.Y)) {
 				res = base.OnButtonPressEvent (evnt);
 			}
-			
+
 			if (DoPopupMenu != null) {
 				DoPopupMenu (evnt);
 				return true;
 			}
-			
+
 			return res;
 		}
 
@@ -165,11 +170,11 @@ namespace MonoDevelop.Components
 			selectOnRelease = false;
 
 			bool res = base.OnButtonReleaseEvent (evnt);
-			
+
 			if (DoPopupMenu != null && evnt.IsContextMenuButton ()) {
 				return true;
 			}
-			
+
 			return res;
 		}
 
@@ -184,7 +189,7 @@ namespace MonoDevelop.Components
 			Selection.SelectFunction = DefaultTreeSelectFunction;
 		}
 
-		static bool DefaultTreeSelectFunction (Gtk.TreeSelection selection, Gtk.TreeModel model, Gtk.TreePath path, bool selected)
+		static bool DefaultTreeSelectFunction (Gtk.TreeSelection selection, TreeModel model, Gtk.TreePath path, bool selected)
 		{
 			return true;
 		}

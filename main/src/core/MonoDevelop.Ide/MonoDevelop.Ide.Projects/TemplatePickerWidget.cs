@@ -1,21 +1,21 @@
-// 
+//
 // TemplatePickerWidget.cs
-//  
+//
 // Author:
 //       Michael Hutchinson <mhutchinson@novell.com>
-// 
+//
 // Copyright (c) 2011 Novell, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,6 +33,9 @@ using MonoDevelop.Components;
 using MonoDevelop.Ide.Templates;
 using System.Linq;
 using MonoDevelop.Ide.Gui.Components;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects
 {
@@ -40,33 +43,33 @@ namespace MonoDevelop.Ide.Projects
 	{
 		SectionList sectionList = new SectionList ();
 		SectionList.Section recentSection, installedSection, onlineSection;
-		
+
 		CategoryTreeView recentTemplateCatView = new CategoryTreeView ();
 		CategoryTreeView installedTemplateCatView = new CategoryTreeView ();
 		CategoryTreeView onlineTemplateCatView = new CategoryTreeView ();
-		
+
 		List<TemplateItem> recentTemplates = new List<TemplateItem> ();
 		List<TemplateItem> installedTemplates = new List<TemplateItem> ();
 		List<TemplateItem> onlineTemplates = new List<TemplateItem> ();
-		
+
 		HPaned hsplit = new HPaned ();
 		VPaned vsplit = new VPaned ();
 		VBox rightVbox = new VBox ();
 		HBox searchHbox = new HBox ();
-		
+
 		CompactScrolledWindow infoScrolledWindow = new CompactScrolledWindow ();
 		VBox infoBox = new VBox ();
 		Label infoHeaderLabel = new Label ();
 		Label infoDecriptionLabel = new Label ();
-		
-		SearchEntry searchEntry = new SearchEntry ();
-		
+
+		MonoDevelop.Components.SearchEntry searchEntry = new MonoDevelop.Components.SearchEntry ();
+
 		TemplateView templateView = new TemplateView ();
-		
+
 		public TemplatePickerWidget ()
 		{
 			BinContainer.Attach (this);
-			
+
 			infoBox.BorderWidth = 4;
 			infoBox.Spacing = 4;
 			infoHeaderLabel.Wrap = true;
@@ -74,7 +77,7 @@ namespace MonoDevelop.Ide.Projects
 			infoDecriptionLabel.Wrap = true;
 			infoDecriptionLabel.Xalign = 0;
 			infoDecriptionLabel.Yalign = 0;
-			
+
 			infoBox.SizeAllocated += delegate {
 				var w = infoBox.Allocation.Width - 10;
 				if (infoHeaderLabel.WidthRequest != w) {
@@ -82,41 +85,41 @@ namespace MonoDevelop.Ide.Projects
 					infoDecriptionLabel.WidthRequest = w;
 				}
 			};
-			
+
 			recentSection = sectionList.AddSection (GettextCatalog.GetString ("Recent Templates"), recentTemplateCatView);
 			installedSection = sectionList.AddSection (GettextCatalog.GetString ("Installed Templates"), installedTemplateCatView);
 			onlineSection = sectionList.AddSection (GettextCatalog.GetString ("Online Templates"), onlineTemplateCatView);
-			
+
 			recentSection.Activated += delegate {
 				LoadTemplatesIntoView (recentTemplates);
 				templateView.SetCategoryFilter (recentTemplateCatView.GetSelection ());
 			};
-			
+
 			installedSection.Activated += delegate {
 				LoadTemplatesIntoView (installedTemplates);
 				templateView.SetCategoryFilter (installedTemplateCatView.GetSelection ());
 			};
-			
+
 			onlineSection.Activated += delegate {
 				LoadTemplatesIntoView (onlineTemplates);
 				templateView.SetCategoryFilter (onlineTemplateCatView.GetSelection ());
 			};
-			
+
 			recentTemplateCatView.SelectionChanged += delegate {
 				if (recentSection.IsActive)
 					templateView.SetCategoryFilter (recentTemplateCatView.GetSelection ());
 			};
-			
+
 			installedTemplateCatView.SelectionChanged += delegate {
 				if (installedSection.IsActive)
 					templateView.SetCategoryFilter (installedTemplateCatView.GetSelection ());
 			};
-			
+
 			onlineTemplateCatView.SelectionChanged += delegate {
 				if (onlineSection.IsActive)
 					templateView.SetCategoryFilter (onlineTemplateCatView.GetSelection ());
 			};
-			
+
 			searchEntry.WidthRequest = 150;
 			searchEntry.EmptyMessage = GettextCatalog.GetString ("Search…");
 			searchEntry.Changed += delegate {
@@ -127,17 +130,17 @@ namespace MonoDevelop.Ide.Projects
 			};
 			searchEntry.Ready = true;
 			searchEntry.Show ();
-			
+
 			installedTemplateCatView.SelectionChanged += delegate (object sender, EventArgs e) {
 				var selection = installedTemplateCatView.GetSelection ();
 				templateView.SetCategoryFilter (selection);
 			};
-			
+
 			templateView.SelectionChanged += TemplateSelectionChanged;
 			templateView.DoubleClicked += delegate {
 				OnActivated ();
 			};
-			
+
 			Add (hsplit);
 			hsplit.Pack1 (sectionList, true, false);
 			hsplit.Pack2 (rightVbox, true, false);
@@ -156,13 +159,13 @@ namespace MonoDevelop.Ide.Projects
 			infoBox.PackStart (infoHeaderLabel, false, false, 0);
 			infoBox.PackStart (infoDecriptionLabel, true, true, 0);
 			hsplit.ShowAll ();
-			
+
 			//sane proportions for the splitter children
 			templateView.HeightRequest = 200;
 			infoScrolledWindow.HeightRequest = 75;
 			sectionList.WidthRequest = 150;
 			rightVbox.WidthRequest = 300;
-			
+
 			sectionList.ActiveIndex = 1;
 		}
 
@@ -178,21 +181,21 @@ namespace MonoDevelop.Ide.Projects
 			}
 			OnSelectionChanged ();
 		}
-		
+
 		void OnSelectionChanged ()
 		{
 			var evt = SelectionChanged;
 			if (evt != null)
 				evt (this, null);
 		}
-		
+
 		void OnActivated ()
 		{
 			var evt = Activated;
 			if (evt != null)
 				evt (this, null);
 		}
-		
+
 		public ProjectTemplate Selection {
 			get {
 				var sel = templateView.CurrentlySelected;
@@ -201,15 +204,15 @@ namespace MonoDevelop.Ide.Projects
 				return sel.Template;
 			}
 		}
-		
+
 		public void SelectTemplate (string id)
 		{
 			templateView.SelectTemplate (id);
 		}
-		
+
 		public event EventHandler SelectionChanged;
 		public event EventHandler Activated;
-		
+
 		void LoadTemplatesIntoView (List<TemplateItem> templates)
 		{
 			templateView.Clear ();
@@ -217,7 +220,7 @@ namespace MonoDevelop.Ide.Projects
 				templateView.AddItem (t);
 			}
 		}
-		
+
 		public void LoadInstalledTemplates (IEnumerable<ProjectTemplate> templates)
 		{
 			foreach (var template in templates) {
@@ -227,15 +230,15 @@ namespace MonoDevelop.Ide.Projects
 			}
 			installedTemplates.Sort ((a,b) => String.Compare (a.Name, b.Name));
 			installedTemplateCatView.Load (installedTemplates);
-			
-			
+
+
 			if (installedTemplateCatView.GetSelection () == null)
 				installedTemplateCatView.SetSelection (new string[0]);
-			
+
 			if (installedSection.IsActive)
 				LoadTemplatesIntoView (installedTemplates);
 		}
-		
+
 		public void LoadRecentTemplates (IEnumerable<ProjectTemplate> templates)
 		{
 			foreach (var template in templates) {
@@ -245,14 +248,14 @@ namespace MonoDevelop.Ide.Projects
 			}
 			//don't sort recent templates, they should already be in most->least recent
 			recentTemplateCatView.Load (recentTemplates);
-			
+
 			if (recentTemplateCatView.GetSelection () == null)
 				recentTemplateCatView.SetSelection (new string[0]);
-			
+
 			if (recentSection.IsActive)
 				LoadTemplatesIntoView (installedTemplates);
 		}
-		
+
 		public string InstalledTemplateSelectedCategory {
 			get {
 				return string.Join ("/", installedTemplateCatView.GetSelection ());
@@ -262,7 +265,7 @@ namespace MonoDevelop.Ide.Projects
 				installedTemplateCatView.SetSelection (cat);
 			}
 		}
-		
+
 		public string RecentTemplateSelectedCategory {
 			get {
 				return string.Join ("/", recentTemplateCatView.GetSelection ());
@@ -272,12 +275,12 @@ namespace MonoDevelop.Ide.Projects
 				recentTemplateCatView.SetSelection (cat);
 			}
 		}
-		
+
 		class CategoryTreeView : CompactScrolledWindow
 		{
 			TreeView view = new TreeView ();
 			TreeStore store = new TreeStore (typeof (string));
-			
+
 			public CategoryTreeView ()
 			{
 				view.Model = store;
@@ -293,26 +296,26 @@ namespace MonoDevelop.Ide.Projects
 				};
 				this.Add (view);
 			}
-			
+
 			public void Load (List<TemplateItem> templates)
 			{
 				store.Clear ();
-				
+
 				string general = GettextCatalog.GetString ("General");
 				string all = GettextCatalog.GetString ("All");
 				var categories = new Dictionary<string, object> ();
-				
+
 				foreach (var tp in templates) {
 					string[] catPath;
 					if (tp.Category == null || tp.Category.Length == 0)
 						catPath = new string[] { general };
 					else
 						catPath = tp.Category;
-					
+
 					Dictionary<string, object> searchCats = categories;
 					for (int i = 0; i < catPath.Length; i++) {
 						string s = catPath[i];
-						KeyValuePair<string,object>? found = null; 
+						KeyValuePair<string,object>? found = null;
 						foreach (var searchCat in searchCats)
 							if (searchCat.Key == s)
 								found = searchCat;
@@ -326,15 +329,15 @@ namespace MonoDevelop.Ide.Projects
 							}
 						} else if (!found.HasValue) {
 							searchCats.Add (s, null);
-						}	
+						}
 					}
 				}
-				
+
 				var iter = store.AppendValues (all);
 				BuildTree (iter, categories);
 				view.ExpandAll ();
 			}
-			
+
 			void BuildTree (TreeIter parent, Dictionary<string, object> cats)
 			{
 				foreach (var cat in cats.OrderBy (kv => kv.Key)) {
@@ -343,22 +346,22 @@ namespace MonoDevelop.Ide.Projects
 						BuildTree (iter, (Dictionary<string, object>) cat.Value);
 				}
 			}
-			
+
 			public IList<string> GetSelection ()
 			{
 				TreeIter selectedIter;
 				if (!view.Selection.GetSelected (out selectedIter))
 					return null;
-				
+
 				string[] selection = new string[store.IterDepth (selectedIter)];
 				TreeIter iter;
-				
+
 				//root is the "all" category
 				store.GetIterFirst (out iter);
 				if (iter.Equals (selectedIter))
 					return selection;
 				store.IterChildren (out iter, iter);
-				
+
 				for (int i = 0; i < selection.Length; i++) {
 					do {
 						if (iter.Equals (selectedIter)) {
@@ -373,22 +376,22 @@ namespace MonoDevelop.Ide.Projects
 				}
 				return selection;
 			}
-			
+
 			public void SetSelection (IList<string> value)
 			{
 				TreeIter parent;
 				if (!store.GetIterFirst (out parent))
 					return;
-				
+
 				//root is the "all" node, matched by zero-length selection array
 				if (value.Count == 0) {
 					view.Selection.SelectIter (parent);
 					return;
 				}
-				
+
 				TreeIter iter;
 				store.IterChildren (out iter, parent);
-				
+
 				int i = 0;
 				while (store.IterNext (ref iter)) {
 					var s = (string) store.GetValue (iter, 0);
@@ -405,16 +408,16 @@ namespace MonoDevelop.Ide.Projects
 				}
 				view.Selection.SelectIter (parent);
 			}
-			
+
 			public event EventHandler SelectionChanged;
 		}
-		
+
 		class TemplateView: CompactScrolledWindow
 		{
 			TemplateTreeView tree;
 			IList<string> categoryFilter;
 			string searchFilter;
-			
+
 			public TemplateView ()
 			{
 				ShowBorderLine = true;
@@ -427,45 +430,45 @@ namespace MonoDevelop.Ide.Projects
 					if (DoubleClicked != null)
 						DoubleClicked (this, EventArgs.Empty);
 				};
-				
+
 				Add (tree);
 				HscrollbarPolicy = PolicyType.Automatic;
 				VscrollbarPolicy = PolicyType.Automatic;
 				ShadowType = ShadowType.None;
 				ShowAll ();
 			}
-			
+
 			public TemplateItem CurrentlySelected {
 				get { return tree.CurrentlySelected; }
 			}
-			
+
 			public void SelectTemplate (string id)
 			{
 				tree.SelectItem (id);
 			}
-			
+
 			public void AddItem (TemplateItem templateItem)
 			{
 				tree.AddItem (templateItem);
 			}
-			
+
 			public void Clear ()
 			{
 				tree.Clear ();
 			}
-			
+
 			public void SetCategoryFilter (IList<string> categoryFilter)
 			{
 				this.categoryFilter = categoryFilter;
 				Refilter ();
 			}
-			
+
 			public void SetSearchFilter (string search)
 			{
 				this.searchFilter = search;
 				Refilter ();
 			}
-			
+
 			bool MatchesCategory (TemplateItem item)
 			{
 				if (categoryFilter == null)
@@ -477,36 +480,36 @@ namespace MonoDevelop.Ide.Projects
 						return false;
 				return true;
 			}
-			
+
 			bool MatchesSearch (TemplateItem item)
 			{
 				return string.IsNullOrWhiteSpace (searchFilter)
 					|| item.Name.IndexOf (searchFilter, StringComparison.CurrentCultureIgnoreCase) >= 0
 					|| item.Template.Description.IndexOf (searchFilter, StringComparison.CurrentCultureIgnoreCase) >= 0;
 			}
-			
+
 			void Refilter ()
 			{
 				tree.Filter (item => MatchesSearch (item) && MatchesCategory (item));
 			}
-			
+
 			public event EventHandler SelectionChanged;
 			public event EventHandler DoubleClicked;
 		}
-		
+
 		class TemplateTreeView: TreeView
 		{
 			Gtk.ListStore templateStore;
 			TreeModelFilter filterModel;
 			Func<TemplateItem,bool> filterFunc;
-			
+
 			public TemplateTreeView ()
 			{
 				HeadersVisible = false;
 				templateStore = new ListStore (typeof(TemplateItem));
 				Model = filterModel = new TreeModelFilter (templateStore, null);
 				filterModel.VisibleFunc = FilterFuncWrapper;
-				
+
 				var col = new TreeViewColumn ();
 				var crp = new CellRendererImage () {
 					StockSize = Gtk.IconSize.Dnd,
@@ -514,11 +517,11 @@ namespace MonoDevelop.Ide.Projects
 				};
 				col.PackStart (crp, false);
 				col.SetCellDataFunc (crp, CellDataFuncIcon);
-				
+
 				var crt = new CellRendererText ();
 				col.PackStart (crt, false);
 				col.SetCellDataFunc (crt, CellDataFuncText);
-				
+
 				AppendColumn (col);
 				ShowAll ();
 			}
@@ -528,11 +531,11 @@ namespace MonoDevelop.Ide.Projects
 				if (filterFunc == null)
 					return true;
 				var item = (TemplateItem) model.GetValue (iter, 0);
-				
+
 				//gets called while the rows are being inserted and don't yet have data
 				if (item == null)
 					return false;
-				
+
 				return filterFunc (item);
 			}
 
@@ -542,23 +545,23 @@ namespace MonoDevelop.Ide.Projects
 				string name = GLib.Markup.EscapeText (item.Name);
 				if (!string.IsNullOrEmpty (item.Template.LanguageName))
 					name += "\n<span foreground='darkgrey'><small>" + item.Template.LanguageName + "</small></span>";
-				
+
 				((CellRendererText)cell).Markup = name;
 			}
-			
+
 			static void CellDataFuncIcon (TreeViewColumn col, CellRenderer cell, TreeModel model, TreeIter iter)
 			{
 				var item = (TemplateItem) model.GetValue (iter, 0);
 				var id = item.Template.Icon.IsNull ? "md-project" : item.Template.Icon.ToString ();
 				((CellRendererImage)cell).StockId = id;
 			}
-			
+
 			public void Filter (Func<TemplateItem,bool> filter)
 			{
 				this.filterFunc = filter;
 				this.filterModel.Refilter ();
 			}
-			
+
 			public TemplateItem CurrentlySelected {
 				get {
 					Gtk.TreeIter iter;
@@ -567,7 +570,7 @@ namespace MonoDevelop.Ide.Projects
 					return (TemplateItem) filterModel.GetValue (iter, 0);
 				}
 			}
-			
+
 			public void SelectItem (string id)
 			{
 				Gtk.TreeIter iter;
@@ -581,18 +584,18 @@ namespace MonoDevelop.Ide.Projects
 					} while (filterModel.IterNext (ref iter));
 				}
 			}
-			
+
 			public void AddItem (TemplateItem templateItem)
 			{
 				templateStore.AppendValues (templateItem);
 			}
-			
+
 			public void Clear ()
 			{
 				templateStore.Clear ();
 			}
 		}
-		
+
 		class TemplateItem
 		{
 			public TemplateItem (ProjectTemplate template)
@@ -604,7 +607,7 @@ namespace MonoDevelop.Ide.Projects
 				else
 					this.Category = new string[0];
 			}
-			
+
 			public string Name { get; private set; }
 			public string[] Category { get; private set; }
 			public ProjectTemplate Template { get; private set; }

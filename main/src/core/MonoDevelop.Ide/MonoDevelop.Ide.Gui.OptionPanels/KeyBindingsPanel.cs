@@ -13,7 +13,7 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
 //
@@ -36,6 +36,9 @@ using MonoDevelop.Components.Commands;
 using Gtk;
 using MonoDevelop.Components;
 using MonoDevelop.Components.AtkCocoaHelper;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Gui.OptionPanels
 {
@@ -49,7 +52,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 		static readonly int iconCol = 5;
 		static readonly int iconVisibleCol = 6;
 		static readonly int visibleCol = 7;
-		
+
 		bool accelIncomplete = false;
 		bool accelComplete = false;
 		TreeStore keyStore;
@@ -57,7 +60,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 		KeyBindingSet currentBindings;
 		bool internalUpdate;
 		List<KeyBindingScheme> schemes;
-		
+
 		TreeModelFilter filterModel;
 		bool filterChanged;
 		string[] processedFilterTerms;
@@ -69,15 +72,15 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 		Dictionary<string, HashSet<Command>> conflicts;
 
 		CellRendererKeyButtons bindingRenderer;
-		
+
 		public KeyBindingsPanel ()
 		{
 			this.Build ();
-			
+
 			keyStore = new TreeStore (typeof (Command), typeof (string), typeof (string), typeof (string), typeof (int), typeof(string), typeof(bool), typeof (bool));
 			keyTreeView.Model = filterModel = new TreeModelFilter (keyStore, null);
 			filterModel.VisibleColumn = visibleCol;
-			
+
 			TreeViewColumn col = new TreeViewColumn ();
 			col.Title = GettextCatalog.GetString ("Command");
 			col.Spacing = 4;
@@ -90,7 +93,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 			col.AddAttribute (crt, "text", labelCol);
 			col.AddAttribute (crt, "weight", boldCol);
 			keyTreeView.AppendColumn (col);
-			
+
 			bindingTVCol = new TreeViewColumn ();
 			bindingTVCol.Title = GettextCatalog.GetString ("Key Binding");
 			bindingRenderer = new CellRendererKeyButtons (this);
@@ -99,11 +102,11 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 			bindingTVCol.AddAttribute (bindingRenderer, "text", bindingCol);
 			bindingTVCol.AddAttribute (bindingRenderer, "command", commandCol);
 			keyTreeView.AppendColumn (bindingTVCol);
-			
+
 			keyTreeView.AppendColumn (GettextCatalog.GetString ("Description"), new CellRendererText (), "text", descCol);
-			
+
 			keyTreeView.Selection.Changed += OnKeysTreeViewSelectionChange;
-			
+
 			accelEntry.KeyPressEvent += OnAccelEntryKeyPress;
 			accelEntry.KeyReleaseEvent += OnAccelEntryKeyRelease;
 			accelEntry.Changed += delegate {
@@ -115,10 +118,10 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 			currentBindings = KeyBindingService.CurrentKeyBindingSet.Clone ();
 
 			schemes = new List<KeyBindingScheme> (KeyBindingService.Schemes);
-			
+
 			foreach (KeyBindingScheme s in schemes)
 				schemeCombo.AppendText (s.Name);
-			
+
 			if (schemes.Count > 0) {
 				schemeCombo.RowSeparatorFunc = (TreeModel model, TreeIter iter) => {
 					if (model.GetValue (iter, 0) as string == "---")
@@ -191,11 +194,11 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 			keyTreeView.ExpandAll ();
 			keyTreeView.ColumnsAutosize ();
 		}
-		
+
 		bool Refilter (TreeIter iter, bool allVisible)
 		{
 			int visibleCount = 0;
-			
+
 			do {
 				TreeIter child;
 				if (keyStore.IterChildren (out child, iter)) {
@@ -214,15 +217,15 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 						visibleCount++;
 				}
 			} while (keyStore.IterNext (ref iter));
-			
+
 			return visibleCount > 0;
 		}
-		
+
 		bool IsSearchMatch (string cmp)
 		{
 			if (cmp == null)
 				return false;
-			
+
 			var lower = cmp.ToLower ();
 			foreach (var term in processedFilterTerms)
 				if (!lower.Contains (term))
@@ -246,7 +249,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 				internalUpdate = false;
 			}
 		}
-		
+
 		public void ApplyChanges ()
 		{
 			KeyBindingService.ResetCurrent (currentBindings);
@@ -258,19 +261,19 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 		{
 			SortedDictionary<string, Command> commands = new SortedDictionary<string, Command> ();
 			string translatedOther = GettextCatalog.GetString ("Other");
-			
+
 			foreach (object c in IdeApp.CommandService.GetCommands ()) {
 				ActionCommand cmd = c as ActionCommand;
 				if (cmd == null || cmd.CommandArray || cmd.Category == GettextCatalog.GetString ("Hidden"))
 					continue;
-				
+
 				string key;
-				
+
 				if (cmd.Id is Enum)
 					key = cmd.Id.GetType () + "." + cmd.Id;
 				else
 					key = cmd.Id.ToString ();
-				
+
 				if (commands.ContainsKey (key)) {
 					if (commands[key].AccelKey == null || commands[key].Text == String.Empty)
 						commands[key] = cmd;
@@ -278,7 +281,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 					commands.Add (key, cmd);
 				}
 			}
-			
+
 			List<Command> sortedCommands = new List<Command> (commands.Values);
 			sortedCommands.Sort (delegate (Command c1, Command c2) {
 				string cat1 = c1.Category.Length == 0? translatedOther : c1.Category;
@@ -290,7 +293,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 				string t2 = c2.DisplayName;
 				return t1.CompareTo (t2);
 			});
-			
+
 			string currentCat = null;
 			TreeIter icat = TreeIter.Zero;
 			foreach (Command cmd in sortedCommands) {
@@ -309,7 +312,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 			Refilter ();
 			return this;
 		}
-		
+
 		void OnKeyBindingSchemeChanged (object sender, EventArgs e)
 		{
 			if (internalUpdate)
@@ -317,18 +320,18 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 
 			if (schemeCombo.Active == schemes.Count + 1)
 				return;
-			
+
 			Command command;
 			string binding;
 			TreeIter iter;
-			
+
 			if (!keyStore.GetIterFirst (out iter))
 				return;
-			
+
 			// Load a key binding template
 			KeyBindingScheme scheme = KeyBindingService.GetSchemeByName (schemeCombo.ActiveText);
 			currentBindings = scheme.GetKeyBindingSet ().Clone ();
-			
+
 			do {
 				TreeIter citer;
 				keyStore.IterChildren (out citer, iter);
@@ -395,15 +398,15 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 			return (e.Key == Gdk.Key.Tab || e.Key == Gdk.Key.ISO_Left_Tab)
 				&& (e.State == Gdk.ModifierType.None || e.State == Gdk.ModifierType.ShiftMask);
 		}
-		
+
 		[GLib.ConnectBefore]
 		void OnAccelEntryKeyPress (object sender, KeyPressEventArgs e)
 		{
 			Gdk.Key key = e.Event.Key;
 			string accel;
-			
+
 			e.RetVal = true;
-			
+
 			if (accelComplete) {
 				// allow Gtk to handle the TAB combo (a11y: keyboard only users need to be able to move the focus)
 				if (GetIsFocusSwitchKey (e.Event)) {
@@ -423,7 +426,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 					return;
 				}
 			}
-			
+
 			accelComplete = false;
 			bool combinationComplete;
 			accel = KeyBindingManager.AccelLabelFromKey (e.Event, out combinationComplete);
@@ -467,7 +470,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 				CurrentKey = currentSelectedBinding.AllKeys.Count > 0 ? currentSelectedBinding.AllKeys [currentSelectedBinding.SelectedKey] : String.Empty;
 			}
 		}
-		
+
 		void OnAccelEntryKeyRelease (object sender, KeyReleaseEventArgs e)
 		{
 			if (accelIncomplete)
@@ -495,7 +498,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 				updateButton.Sensitive = addButton.Sensitive = false;
 			}
 		}
-		
+
 		void OnUpdateButtonClick (object sender, EventArgs e)
 		{
 			if (CurrentSelectedBinding != null) {
@@ -597,7 +600,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 		{
 			//item may not be visible if the list is filtered
 			searchEntry.Entry.Text = "";
-			
+
 			TreeIter iter;
 			if (!keyStore.GetIterFirst (out iter))
 				return;
@@ -626,7 +629,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 
 			var bindings = FindBindings (CurrentKey);
 			bindings.Remove (CurrentSelectedBinding.Command);
-			
+
 			if (bindings.Count > 0) {
 				HashSet<Command> cmdConflicts = null;
 				if (IdeApp.CommandService.Conflicts.TryGetValue (CurrentSelectedBinding.Command, out cmdConflicts)) {
@@ -667,7 +670,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 			} while (model.IterNext (ref iter));
 			return bindings;
 		}
-		
+
 		bool Conflicts (string b1, string b2)
 		{
 			// Control+X conflicts with Control+X, Control+X|Y
@@ -685,17 +688,17 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 			else
 				return b1.Substring (0, i) == b2;
 		}
-		
+
 		public bool ValidateChanges ()
 		{
 			return true;
 		}
-		
+
 		public bool IsVisible ()
 		{
 			return true;
 		}
-		
+
 		public void Initialize (OptionsDialog dialog, object dataObject)
 		{
 		}
@@ -741,7 +744,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 		class CellRendererKeyButtons : CellRendererText
 		{
 			static Pango.FontDescription KeySymbolFont = Styles.DefaultFont.Copy ();
-			
+
 			const int KeyVPadding = 1;
 			const int KeyHPadding = 6;
 			const int KeyBgRadius = 3;
@@ -1021,7 +1024,7 @@ namespace MonoDevelop.Ide.Gui.OptionPanels
 						layout.GetPixelSize (out w, out h);
 						if (height == 0)
 							height = h + (KeyVPadding * 2) + 1;
-						
+
 						buttonWidth = w + (2 * KeyHPadding);
 						width += buttonWidth + Spacing;
 					}

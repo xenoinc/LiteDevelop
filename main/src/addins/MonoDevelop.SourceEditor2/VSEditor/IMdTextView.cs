@@ -1,6 +1,7 @@
 namespace Microsoft.VisualStudio.Text.Editor
 {
-	internal interface IMdTextView : ITextView2
+// oe NOTICE using the original-Gtk-editor.
+	internal interface IMdTextView : ITextView
     {
         MonoDevelop.SourceEditor.IMDSpaceReservationManager GetSpaceReservationManager(string name);
 

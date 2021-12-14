@@ -13,10 +13,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -36,13 +36,16 @@ using MonoDevelop.Core;
 using MonoDevelop.Components;
 using MonoDevelop.Ide.Gui.Dialogs;
 using Gtk;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects.OptionPanels
 {
 	internal class SolutionItemConfigurationsPanel : ItemOptionsPanel
 	{
 		CombineEntryConfigurationsPanelWidget widget;
-		
+
 		public override Control CreatePanelWidget ()
 		{
 			MultiConfigItemOptionsDialog dlg = (MultiConfigItemOptionsDialog) ParentDialog;
@@ -55,23 +58,23 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
        	}
 	}
 
-	partial class CombineEntryConfigurationsPanelWidget : Gtk.Bin 
+	partial class CombineEntryConfigurationsPanelWidget : Gtk.Bin
 	{
 		TreeStore store;
 		ConfigurationData configData;
-		
+
 		public CombineEntryConfigurationsPanelWidget (MultiConfigItemOptionsDialog dlg)
 		{
 			Build ();
-			
+
 			configData = dlg.ConfigurationData;
-			
+
 			store = new TreeStore (typeof(object), typeof(string));
 			configsList.Model = store;
 			configsList.SearchColumn = -1; // disable the interactive search
 			configsList.HeadersVisible = true;
 			store.SetSortColumnId (1, SortType.Ascending);
-			
+
 			TreeViewColumn col = new TreeViewColumn ();
 			CellRendererText sr = new CellRendererText ();
 			col.PackStart (sr, true);
@@ -88,7 +91,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			renameButton.Clicked += new EventHandler (OnRenameConfiguration);
 			copyButton.Clicked += new EventHandler (OnCopyConfiguration);
 		}
-		
+
 		void OnAddConfiguration (object sender, EventArgs args)
 		{
 			AddConfiguration (null);
@@ -100,7 +103,7 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			Gtk.TreeIter iter;
 			if (!configsList.Selection.GetSelected (out foo, out iter))
 				return;
-				
+
 			ItemConfiguration cc = (ItemConfiguration) store.GetValue (iter, 0);
 			AddConfiguration (cc.Id);
 		}
@@ -130,15 +133,15 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 			Gtk.TreeIter iter;
 			if (!configsList.Selection.GetSelected (out foo, out iter))
 				return;
-			
+
 			if (configData.Configurations.Count == 1) {
 				MessageService.ShowWarning (GettextCatalog.GetString ("There must be at least one configuration."));
 				return;
 			}
-			
+
 			var cc = (ItemConfiguration) store.GetValue (iter, 0);
 			var dlg = new DeleteConfigDialog ();
-			
+
 			try {
 				if (MessageService.RunCustomDialog (dlg, Toplevel as Gtk.Window)== (int) Gtk.ResponseType.Yes) {
 					configData.RemoveConfiguration (cc.Id, dlg.DeleteChildren);
@@ -149,18 +152,18 @@ namespace MonoDevelop.Ide.Projects.OptionPanels
 				dlg.Dispose ();
 			}
 		}
-		
+
 		void OnRenameConfiguration (object sender, EventArgs args)
 		{
 			Gtk.TreeModel foo;
 			Gtk.TreeIter iter;
 			if (!configsList.Selection.GetSelected (out foo, out iter))
 				return;
-				
+
 			ItemConfiguration cc = (ItemConfiguration) store.GetValue (iter, 0);
 			RenameConfigDialog dlg = new RenameConfigDialog (configData.Configurations);
 			dlg.ConfigName = cc.Id;
-			
+
 			try {
 				bool done = false;
 				do {

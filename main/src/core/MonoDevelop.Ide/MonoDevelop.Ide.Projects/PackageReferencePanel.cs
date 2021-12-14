@@ -38,10 +38,13 @@ using System.Globalization;
 using MonoDevelop.Ide.Gui.Components;
 using MonoDevelop.Core.Text;
 using MonoDevelop.Components;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Projects
 {
-    internal class PackageReferencePanel : VBox, IReferencePanel 
+    internal class PackageReferencePanel : VBox, IReferencePanel
     {
         ListStore store = null;
         private TreeView treeView = null;
@@ -53,7 +56,7 @@ namespace MonoDevelop.Ide.Projects
         private IAssemblyContext targetContext;
         private TargetFramework targetVersion;
         private SelectReferenceDialog selectDialog = null;
-		
+
 		const int ColName = 0;
 		const int ColVersion = 1;
 		const int ColAssembly = 2;
@@ -64,12 +67,12 @@ namespace MonoDevelop.Ide.Projects
 		const int ColMatchRank = 7;
 		const int ColProjectName = 8;
 		const int ColType = 9;
-        
+
         public PackageReferencePanel (SelectReferenceDialog selectDialog, bool showAll)
         {
             this.selectDialog = selectDialog;
 			this.showAll = showAll;
-			
+
 			store = new ListStore (typeof (string), typeof (string), typeof (SystemAssembly), typeof (bool), typeof (string), typeof (string), typeof(IconId), typeof(int), typeof (string), typeof(ReferenceType));
             treeView = new TreeView (store);
 
@@ -108,7 +111,7 @@ namespace MonoDevelop.Ide.Projects
             ShowAll ();
             BorderWidth = 6;
         }
-		
+
 		public void SetProject (DotNetProject netProject)
 		{
 			selection.Clear ();
@@ -122,7 +125,7 @@ namespace MonoDevelop.Ide.Projects
 				store.Clear ();
 			}
 		}
-		
+
 		public void SetFilter (string filter)
 		{
 			if (!string.IsNullOrEmpty (filter))
@@ -249,12 +252,12 @@ namespace MonoDevelop.Ide.Projects
 				treeView.ThawChildNotify ();
 			}
         }
-		
+
 		internal static string GetMatchMarkup (Gtk.Widget widget, string text, int[] matches, int startIndex)
 		{
 			StringBuilder result = new StringBuilder ();
 			int lastPos = 0;
-			var color = HslColor.GenerateHighlightColors (widget.Style.Base (StateType.Normal), 
+			var color = HslColor.GenerateHighlightColors (widget.Style.Base (StateType.Normal),
 				widget.Style.Text (StateType.Normal), 3)[2];
 			for (int n=0; n < matches.Length; n++) {
 				int pos = matches[n] - startIndex;
@@ -278,10 +281,10 @@ namespace MonoDevelop.Ide.Projects
         {
 			if (!showAll && refInfo.ReferenceType != ReferenceType.Package)
 				return;
-			
+
             TreeIter iter;
 			bool found = false;
-			
+
             if (store.GetIterFirst (out iter)) {
                 do {
 					if (refInfo.ReferenceType == (ReferenceType) store.GetValue(iter, ColType)) {
@@ -310,7 +313,7 @@ namespace MonoDevelop.Ide.Projects
 				store.SetValue(iter, ColSelected, newState);
 			SetSelection (refInfo.ReferenceType, refInfo.Reference, refInfo.Package != null ? refInfo.Package.Name : "", newState);
         }
-		
+
 		void SetSelection (ReferenceType type, string name, string pkg, bool selected)
 		{
 			if (selected)
@@ -318,7 +321,7 @@ namespace MonoDevelop.Ide.Projects
 			else
 				selection.Remove (type + " " + name + " " + pkg);
 		}
-		
+
 		bool IsSelected (ReferenceType type, string name, string pkg)
 		{
 			return selection.Contains (type + " " + name + " " + pkg);
@@ -327,13 +330,13 @@ namespace MonoDevelop.Ide.Projects
         private int Sort (TreeModel model, TreeIter left, TreeIter right)
         {
 			int result = 0;
-			
+
 			if (stringMatcher != null) {
 				result = ((int)model.GetValue (right, ColMatchRank)).CompareTo ((int)model.GetValue (left, ColMatchRank));
 				if (result != 0)
 					return result;
 			}
-			
+
             result = String.Compare ((string)model.GetValue (left, 0), (string)model.GetValue (right, 0), StringComparison.InvariantCultureIgnoreCase);
 
             if (result != 0)

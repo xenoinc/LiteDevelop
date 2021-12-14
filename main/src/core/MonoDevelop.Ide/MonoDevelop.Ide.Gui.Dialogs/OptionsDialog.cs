@@ -34,10 +34,13 @@ using MonoDevelop.Ide.Extensions;
 using MonoDevelop.Ide.Gui.Components;
 using MonoDevelop.Components;
 using MonoDevelop.Components.AtkCocoaHelper;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Gui.Dialogs
 {
-	
+
 	public partial class OptionsDialog : IdeDialog
 	{
 		Gtk.HBox mainHBox;
@@ -57,11 +60,11 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 		ExtensionContext extensionContext;
 		HashSet<object> modifiedObjects = new HashSet<object> ();
 		bool removeEmptySections;
-		
+
 		const string emptyCategoryIcon = "md-prefs-generic";
 		const Gtk.IconSize treeIconSize = IconSize.Menu;
 		const Gtk.IconSize headerIconSize = IconSize.Button;
-		
+
 		public object DataObject {
 			get {
 				return mainDataObject;
@@ -73,7 +76,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 				return extensionContext;
 			}
 		}
-		
+
 		public HashSet<object> ModifiedObjects {
 			get { return modifiedObjects; }
 		}
@@ -81,10 +84,10 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 		public OptionsDialog (string extensionPath): this (null, null, extensionPath)
 		{
 		}
-		
+
 		public OptionsDialog (MonoDevelop.Components.Window parentWindow, object dataObject, string extensionPath) : this (parentWindow, dataObject, extensionPath, true)
 		{}
-		
+
 		public OptionsDialog (MonoDevelop.Components.Window parentWindow, object dataObject, string extensionPath, bool removeEmptySections)
 		{
 			buttonCancel = new Gtk.Button (Gtk.Stock.Cancel);
@@ -178,10 +181,10 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 
 			this.removeEmptySections = removeEmptySections;
 			extensionContext = AddinManager.CreateExtensionContext ();
-			
+
 			this.mainDataObject = dataObject;
 			this.extensionPath = extensionPath;
-			
+
 			ImageService.EnsureStockIconIsLoaded (emptyCategoryIcon);
 
 			store = new TreeStore (typeof(OptionsDialogSection));
@@ -203,13 +206,13 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			tree.AppendColumn (col);
 
 			tree.ExpanderColumn = col;
-			
+
 			tree.Selection.Changed += OnSelectionChanged;
-			
+
 			Child.ShowAll ();
-			
+
 			InitializeContext (extensionContext);
-			
+
 			FillTree ();
 			ExpandCategories ();
 			RestoreLastPanel ();
@@ -226,16 +229,16 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 		{
 			TreeIter parent;
 			bool toplevel = !model.IterParent (out parent, iter);
-			
+
 			var crp = (CellRendererImage) cell;
 			crp.Visible = !toplevel;
-			
+
 			if (toplevel) {
 				return;
 			}
-			
+
 			var section = (OptionsDialogSection) model.GetValue (iter, 0);
-			
+
 			//HACK: The mimetype panels can't register a single fake stock ID for all the possible image size.
 			// Instead, give this some awareness of the mime system.
 			var mimeSection = section as MonoDevelop.Ide.Projects.OptionPanels.MimetypeOptionsDialogSection;
@@ -251,26 +254,26 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 				crp.Image = ImageService.GetIcon (icon, treeIconSize);
 			}
 		}
-		
+
 		static void TextCellDataFunc (TreeViewColumn col, CellRenderer cell, TreeModel model, TreeIter iter)
 		{
 			TreeIter parent;
 			bool toplevel = !model.IterParent (out parent, iter);
-			
+
 			var crt = (CellRendererText) cell;
 			var section = (OptionsDialogSection) model.GetValue (iter, 0);
-			
+
 			if (toplevel) {
 				crt.Markup = "<b>" + GLib.Markup.EscapeText (section.Label) + "</b>";
 			} else {
 				crt.Text = section.Label;
 			}
 		}
-		
+
 		protected Control MainBox {
 			get { return pageFrame; }
 		}
-		
+
 		protected void ExpandCategories ()
 		{
 			TreeIter it;
@@ -281,7 +284,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 				} while (store.IterNext (ref it));
 			}
 		}
-		
+
 		public void FillTree ()
 		{
 			DetachWidgets ();
@@ -291,7 +294,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 				AddSection (section, mainDataObject);
 			}
 		}
-		
+
 		protected virtual void InitializeContext (ExtensionContext extensionContext)
 		{
 		}
@@ -375,14 +378,14 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			}
 			throw new InvalidOperationException ("Parent options panel not found in the dialog.");
 		}
-		
+
 		internal void RemoveSection (OptionsDialogSection section)
 		{
 			SectionPage page;
 			if (pages.TryGetValue (section, out page))
 				RemoveSection (page.Iter);
 		}
-		
+
 		void RemoveSection (Gtk.TreeIter it)
 		{
 			Gtk.TreeIter ci;
@@ -391,7 +394,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 					RemoveSection (ci);
 				} while (store.IterNext (ref ci));
 			}
-			
+
 			// If the this panel is the selection, select the parent before removing
 			Gtk.TreeIter itsel;
 			if (tree.Selection.GetSelected (out itsel)) {
@@ -418,12 +421,12 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			}
 			store.Remove (ref it);
 		}
-		
+
 		internal TreeIter AddSection (OptionsDialogSection section, object dataObject)
 		{
 			return AddSection (TreeIter.Zero, section, dataObject);
 		}
-		
+
 		internal TreeIter AddSection (TreeIter parentIter, OptionsDialogSection section, object dataObject)
 		{
 			TreeIter it;
@@ -432,10 +435,10 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			} else {
 				it = store.AppendValues (parentIter,section);
 			}
-			
+
 			if (!section.CustomNode)
 				AddChildSections (it, section, dataObject);
-			
+
 			// Remove the section if it doesn't have children nor panels
 			SectionPage page = CreatePage (it, section, dataObject);
 			TreeIter cit;
@@ -446,7 +449,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			}
 			return it;
 		}
-		
+
 		internal virtual void AddChildSections (TreeIter parentIter, OptionsDialogSection section, object dataObject)
 		{
 			foreach (ExtensionNode nod in section.ChildNodes) {
@@ -454,7 +457,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 					AddSection (parentIter, (OptionsDialogSection) nod, dataObject);
 			}
 		}
-		
+
 		void DetachWidgets ()
 		{
 			foreach (Gtk.Widget w in pageFrame.Children)
@@ -471,13 +474,13 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 				}
 			}
 		}
-		
+
 		protected override void OnResponse (ResponseType resp)
 		{
 			base.OnResponse (resp);
 			DetachWidgets ();
 		}
-		
+
 		protected virtual bool ValidateChanges ()
 		{
 			foreach (SectionPage sp in pages.Values) {
@@ -490,7 +493,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			}
 			return true;
 		}
-		
+
 		protected virtual void ApplyChanges ()
 		{
 			foreach (SectionPage sp in pages.Values) {
@@ -500,8 +503,8 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 					pi.Panel.ApplyChanges ();
 			}
 		}
-		
-		
+
+
 		void OnSelectionChanged (object s, EventArgs a)
 		{
 			TreeIter it;
@@ -512,7 +515,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 				this.UseNativeContextMenus ();
 			}
 		}
-		
+
 		bool HasVisiblePanel (OptionsDialogSection section)
 		{
 			SectionPage page;
@@ -528,7 +531,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			}
 			return false;
 		}
-		
+
 		internal void ShowPage (OptionsDialogSection section, bool forceExpand = false)
 		{
 			if (!IsRealized) {
@@ -544,7 +547,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			SectionPage page;
 			if (!pages.TryGetValue (section, out page))
 				return;
-			
+
 			if (page.Panels.Count == 0) {
 				foreach (ExtensionNode node in section.ChildNodes) {
 					if (node is OptionsDialogSection) {
@@ -563,7 +566,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 				}
 				pageFrame.Remove (w);
 			}
-			
+
 			if (page.Widget == null)
 				CreatePageWidget (page);
 
@@ -583,7 +586,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 				((Gtk.Container)page.Widget).Remove (page.Widget);
 			algn.Add (page.Widget);*/
 			pageFrame.PackStart (page.Widget, true, true, 0);
-			
+
 			// Ensures that the Shown event is fired for each panel
 			Container c = page.Widget as Gtk.Container;
 			if (c != null) {
@@ -601,22 +604,22 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			}
 			tree.Selection.SelectIter (page.Iter);
 		}
-		
+
 		SectionPage CreatePage (TreeIter it, OptionsDialogSection section, object dataObject)
 		{
 			SectionPage page;
 			if (pages.TryGetValue (section, out page))
 				return page;
-			
+
 			page = new SectionPage ();
 			page.Iter = it;
 			page.Panels = new List<PanelInstance> ();
 			pages [section] = page;
-			
+
 			List<OptionsPanelNode> nodes = new List<OptionsPanelNode> ();
 			if (!string.IsNullOrEmpty (section.TypeName) || section.CustomNode)
 				nodes.Add (section);
-			
+
 			if (!section.CustomNode) {
 				foreach (ExtensionNode nod in section.ChildNodes) {
 					OptionsPanelNode node = nod as OptionsPanelNode;
@@ -683,12 +686,12 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			}
 			return page;
 		}
-		
+
 		void CreatePageWidget (SectionPage page)
 		{
 			List<PanelInstance> boxPanels = new List<PanelInstance> ();
 			List<PanelInstance> tabPanels = new List<PanelInstance> ();
-			
+
 			foreach (PanelInstance pi in page.Panels) {
 				if (pi.Widget == null) {
 					try {
@@ -706,16 +709,16 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 				}
 				else if (pi.Widget.Parent != null)
 					((Gtk.Container) pi.Widget.Parent).Remove (pi.Widget);
-					
+
 				if (pi.Node.Grouping == PanelGrouping.Tab)
 					tabPanels.Add (pi);
 				else
 					boxPanels.Add (pi);
 			}
-			
+
 			// Try to fit panels with grouping=box or auto in the main page.
 			// If they don't fit. Move auto panels to its own tab page.
-			
+
 			int mainPageSize;
 			bool fits;
 			do {
@@ -741,7 +744,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 					}
 				}
 			} while (!fits);
-			
+
 			Gtk.VBox box = new VBox (false, 12);
 			box.Show ();
 			for (int n=0; n<boxPanels.Count; n++) {
@@ -754,7 +757,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 				box.PackStart (pi.Widget, pi.Node.Fill, pi.Node.Fill, 0);
 				pi.Widget.Show ();
 			}
-			
+
 			box.BorderWidth = 12;
 
 			if (tabPanels.Count > 0) {
@@ -812,7 +815,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 
 			if (DataObject != null)
 				modifiedObjects.Add (DataObject);
-			
+
 			this.Respond (ResponseType.Ok);
 		}
 
@@ -846,7 +849,7 @@ namespace MonoDevelop.Ide.Gui.Dialogs
 			public OptionsPanelNode Node;
 			public object DataObject;
 		}
-		
+
 		class SectionPage
 		{
 			public List<PanelInstance> Panels;

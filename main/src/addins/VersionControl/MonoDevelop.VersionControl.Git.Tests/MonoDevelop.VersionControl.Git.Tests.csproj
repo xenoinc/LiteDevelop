@@ -48,10 +48,6 @@
       <Project>{D12F0F7B-8DE3-43EC-BA49-41052D065A9B}</Project>
       <Name>GuiUnit_NET_4_5</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\external\libgit2sharp\LibGit2Sharp\LibGit2Sharp.csproj">
-      <Project>{EE6ED99F-CB12-4683-B055-D28FC7357A34}</Project>
-      <Name>LibGit2Sharp</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\MonoDevelop.SourceEditor2\MonoDevelop.SourceEditor.csproj">
       <Project>{F8F92AA4-A376-4679-A9D4-60E7B7FBF477}</Project>
       <Name>MonoDevelop.SourceEditor</Name>
@@ -59,27 +55,28 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <IncludeCopyLocal Include="LibGit2Sharp.dll" />
+    <PackageReference Include="LibGit2Sharp" Version="0.27.0-preview-g1da3cfaa68" />
+    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="[2.0.312]" PrivateAssets="none" />
   </ItemGroup>
-  <Choose>
-    <When Condition=" '$(Configuration)' == 'DebugMac' OR '$(Configuration)' == 'ReleaseMac' ">
-      <ItemGroup>
-        <NativeBinaries Include="..\..\..\..\external\libgit-binary\mac\*.dylib" />
-      </ItemGroup>
-    </When>
-    <When Condition=" '$(Configuration)' == 'DebugWin32' OR '$(Configuration)' == 'ReleaseWin32' ">
-      <ItemGroup>
-        <NativeBinaries Include="..\..\..\..\external\libgit-binary\windows\*.*" />
-      </ItemGroup>
-    </When>
-    <When Condition=" '$(Configuration)' == 'DebugGnome' OR '$(Configuration)' == 'ReleaseGnome' ">
-      <ItemGroup>
-        <NativeBinaries Include="..\..\..\..\external\libgit2\build\*.so*" />
-      </ItemGroup>
-    </When>
-  </Choose>
+<!--  <Choose>-->
+<!--    <When Condition=" '$(Configuration)' == 'DebugMac' OR '$(Configuration)' == 'ReleaseMac' ">-->
+<!--      <ItemGroup>-->
+<!--        <NativeBinaries Include="..\..\..\..\external\libgit-binary\mac\*.dylib" />-->
+<!--      </ItemGroup>-->
+<!--    </When>-->
+<!--    <When Condition=" '$(Configuration)' == 'DebugWin32' OR '$(Configuration)' == 'ReleaseWin32' ">-->
+<!--      <ItemGroup>-->
+<!--        <NativeBinaries Include="..\..\..\..\external\libgit-binary\windows\*.*" />-->
+<!--      </ItemGroup>-->
+<!--    </When>-->
+<!--    <When Condition=" '$(Configuration)' == 'DebugGnome' OR '$(Configuration)' == 'ReleaseGnome' ">-->
+<!--      <ItemGroup>-->
+<!--        <NativeBinaries Include="..\..\..\..\external\libgit2\build\*.so*" />-->
+<!--      </ItemGroup>-->
+<!--    </When>-->
+<!--  </Choose>-->
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Target Name="AfterBuild">
-    <Copy SourceFiles="@(NativeBinaries)" DestinationFolder="$(OutputPath)\" SkipUnchangedFiles="true" />
-  </Target>
+<!--  <Target Name="AfterBuild">-->
+<!--    <Copy SourceFiles="@(NativeBinaries)" DestinationFolder="$(OutputPath)\" SkipUnchangedFiles="true" />-->
+<!--  </Target>-->
 </Project>

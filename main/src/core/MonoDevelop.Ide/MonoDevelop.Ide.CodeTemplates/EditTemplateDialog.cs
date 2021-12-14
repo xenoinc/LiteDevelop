@@ -1,21 +1,21 @@
-// 
+//
 // EditTemplateDialog.cs
-//  
+//
 // Author:
 //       Mike Krüger <mkrueger@novell.com>
-// 
+//
 // Copyright (c) 2009 Novell, Inc (http://www.novell.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,12 +29,14 @@ using System.Linq;
 using System.Collections.Generic;
 using MonoDevelop.Components;
 using Gtk;
- 
+
 using MonoDevelop.Core;
 using Gdk;
 using MonoDevelop.Ide.Editor;
 using MonoDevelop.Core.Text;
-
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.CodeTemplates
 {
@@ -46,9 +48,9 @@ namespace MonoDevelop.Ide.CodeTemplates
 		ListStore variablesListStore;
 		List<CodeTemplateVariable> variables = new List<CodeTemplateVariable> ();
 		MonoDevelop.Components.PropertyGrid.PropertyGrid grid;
-		
+
 		TreeStore variableStore;
-		
+
 		public EditTemplateDialog (CodeTemplate template, bool isNew)
 		{
 			this.Build();
@@ -60,10 +62,10 @@ namespace MonoDevelop.Ide.CodeTemplates
 			this.entryDescription.Text = template.Description ?? "";
 			this.textEditor.MimeType = template.MimeType;
 			this.textEditor.Text = template.Code ?? "";
-			
+
 			checkbuttonExpansion.Active = (template.CodeTemplateType & CodeTemplateType.Expansion) == CodeTemplateType.Expansion;
 			checkbuttonSurroundWith.Active = (template.CodeTemplateType & CodeTemplateType.SurroundsWith) == CodeTemplateType.SurroundsWith;
-			
+
 			Gtk.Widget control = textEditor;
 			scrolledwindow1.AddWithViewport (control);
 			control.ShowAll ();
@@ -86,32 +88,32 @@ namespace MonoDevelop.Ide.CodeTemplates
 			}
 			textEditor.TextChanged += DocumentTextReplaced;
 			this.buttonOk.Clicked += ButtonOkClicked;
-			
+
 			checkbuttonWhiteSpaces.Hide ();
-			
+
 			variablesListStore = new ListStore (typeof (string), typeof (CodeTemplateVariable));
 			comboboxVariables.Model = variablesListStore;
 			comboboxVariables.Changed += ComboboxVariablesChanged;
-			
+
 			variableStore = new TreeStore (typeof (string), typeof (CodeTemplateVariable), typeof (string), typeof (int));
 			treeviewVariable.Model = variableStore;
 			treeviewVariable.HeadersVisible = false;
-			
+
 			treeviewVariable.AppendColumn ("", new Gtk.CellRendererText (), "text", 0);
 			CellRendererText nameRenderer = new CellRendererText ();
 			treeviewVariable.AppendColumn ("", nameRenderer, delegate (TreeViewColumn col, CellRenderer cell, TreeModel model, TreeIter iter) {
 				nameRenderer.Markup = ((string)model.GetValue (iter, 2));
 			});
-			
+
 			grid = new MonoDevelop.Components.PropertyGrid.PropertyGrid ();
 			grid.PropertySort = MonoDevelop.Components.PropertyGrid.PropertySort.Alphabetical;
 			grid.ShowHelp = true;
 			grid.ShowAll ();
 			grid.ShowToolbar = false;
-			
+
 			vbox4.Remove (scrolledwindow2);
 			vbox4.PackEnd (grid, true, true, 0);
-			
+
 			UpdateVariables ();
 		}
 
@@ -185,7 +187,7 @@ namespace MonoDevelop.Ide.CodeTemplates
 					return;
 				start--;
 			}
-			
+
 			int end = offset;
 			while (end < textEditor.Length) {
 				char ch = textEditor.GetCharAt (end);
@@ -209,15 +211,15 @@ namespace MonoDevelop.Ide.CodeTemplates
 						}
 					} while (variablesListStore.IterNext (ref iter));
 				}
-				
+
 			}
 		}
-		
+
 		void FillVariableTree (CodeTemplateVariable var)
 		{
 			grid.CurrentObject = var;
 		}
-		
+
 		void UpdateVariables ()
 		{
 			variablesListStore.Clear ();
@@ -227,7 +229,7 @@ namespace MonoDevelop.Ide.CodeTemplates
 			foreach (CodeTemplateVariable var in template.Variables) {
 				variablesListStore.AppendValues (var.Name, var);
 			}
-			
+
 		}
 	}
 }

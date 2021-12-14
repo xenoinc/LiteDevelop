@@ -13,10 +13,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -33,7 +33,11 @@ using System;
 using MonoDevelop.Core;
 using MonoDevelop.Core.Instrumentation;
 using Mono.Addins;
+#if GTK3
+using Mono.Addins.GuiGtk3;
+#else
 using Mono.Addins.Gui;
+#endif
 using Mono.Addins.Setup;
 using MonoDevelop.Components.Commands;
 
@@ -68,10 +72,10 @@ namespace MonoDevelop.Ide
 		static bool isInitialRun;
 		static bool isInitialRunAfterUpgrade;
 		static Version upgradedFromVersion;
-		
+
 		public static event ExitEventHandler Exiting;
 		public static event EventHandler Exited;
-		
+
 		static EventHandler initializedEvent;
 		public static event EventHandler Initialized {
 			add {
@@ -115,7 +119,7 @@ namespace MonoDevelop.Ide
 			add { CommandService.ApplicationFocusIn += value; }
 			remove { CommandService.ApplicationFocusIn -= value; }
 		}
-		
+
 		/// <summary>
 		/// Fired when the IDE loses the focus
 		/// </summary>
@@ -163,17 +167,17 @@ namespace MonoDevelop.Ide
 		public static bool IsInitialRun {
 			get { return isInitialRun; }
 		}
-		
+
 		// Returns true if MD is running for the first time after being upgraded from a previous version
 		public static bool IsInitialRunAfterUpgrade {
 			get { return isInitialRunAfterUpgrade; }
 		}
-		
+
 		// If IsInitialRunAfterUpgrade is true, returns the previous version
 		public static Version UpgradedFromVersion {
 			get { return upgradedFromVersion; }
 		}
-		
+
 		public static Version Version {
 			get {
 				return Runtime.Version;
@@ -258,7 +262,7 @@ namespace MonoDevelop.Ide
 			Counters.InitializationTracker.Trace ("Creating Root Workspace");
 
 			CustomToolService.Init ();
-			
+
 			FileService.ErrorHandler = FileServiceErrorHandler;
 
 			monitor.BeginTask (GettextCatalog.GetString("Loading Workbench"), 3);
@@ -274,7 +278,7 @@ namespace MonoDevelop.Ide
 
 			MessageService.RootWindow = workbench.RootWindow;
 			Xwt.MessageDialog.RootWindow = Xwt.Toolkit.CurrentEngine.WrapWindow (workbench.RootWindow);
-		
+
 			commandService.EnableIdleUpdate = true;
 
 			if (Customizer != null)
@@ -435,7 +439,7 @@ namespace MonoDevelop.Ide
 				});
 			}
 		}
-		
+
 		public static bool IsRunning { get; internal set; }
 
 		public static bool IsExiting { get; private set; }
@@ -460,7 +464,7 @@ namespace MonoDevelop.Ide
 		/// <returns> false if the user cancels exiting. </returns>
 		/// <param name="reopenWorkspace"> true to reopen current workspace. </param>
 		/// <remarks>
-		/// Starts a new MonoDevelop instance in a new process and 
+		/// Starts a new MonoDevelop instance in a new process and
 		/// stops the current MonoDevelop instance.
 		/// </remarks>
 		public static async Task<bool> Restart (bool reopenWorkspace = false)
@@ -589,13 +593,13 @@ namespace MonoDevelop.Ide
 			}
 			return true;
 		}
-		
+
 		internal static void OnExited ()
 		{
 			if (Exited != null)
 				Exited (null, EventArgs.Empty);
 		}
-		
+
 		static StatusBarIcon instrumentationStatusIcon;
 		static void UpdateInstrumentationIcon ()
 		{

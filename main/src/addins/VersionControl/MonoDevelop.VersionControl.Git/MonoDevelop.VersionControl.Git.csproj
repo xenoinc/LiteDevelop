@@ -93,10 +93,6 @@
       <Name>Mono.Addins</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\external\libgit2sharp\LibGit2Sharp\LibGit2Sharp.csproj">
-      <Project>{EE6ED99F-CB12-4683-B055-D28FC7357A34}</Project>
-      <Name>LibGit2Sharp</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\MonoDevelop.SourceEditor2\MonoDevelop.SourceEditor.csproj">
       <Project>{F8F92AA4-A376-4679-A9D4-60E7B7FBF477}</Project>
       <Name>MonoDevelop.SourceEditor</Name>
@@ -110,43 +106,45 @@
     <EmbeddedResource Include="MonoDevelop.VersionControl.Git.Win32.addin.xml" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="[2.0.312]" PrivateAssets="none" />
+    <PackageReference Include="LibGit2Sharp" Version="0.27.0-preview-g1da3cfaa68" />
     <None Include="GitIgnore.txt">
       <Gettext-ScanForTranslations>False</Gettext-ScanForTranslations>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="..\..\..\..\external\libgit-binary\libgit2.license.txt">
-      <Link>libgit2.license.txt</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\..\..\..\external\libgit-binary\libssh2.license.txt">
-      <Link>libssh2.license.txt</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+<!--    <None Include="..\..\..\..\external\libgit-binary\libgit2.license.txt">-->
+<!--      <Link>libgit2.license.txt</Link>-->
+<!--      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+<!--    </None>-->
+<!--    <None Include="..\..\..\..\external\libgit-binary\libssh2.license.txt">-->
+<!--      <Link>libssh2.license.txt</Link>-->
+<!--      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+<!--    </None>-->
     <IncludeCopyLocal Include="LibGit2Sharp.dll" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="MonoDevelop.VersionControl.Git.Tests" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Choose>
-    <When Condition=" '$(Configuration)' == 'DebugMac' OR '$(Configuration)' == 'ReleaseMac' ">
-      <ItemGroup>
-        <NativeBinaries Include="..\..\..\..\external\libgit-binary\mac\*.dylib" />
-      </ItemGroup>
-    </When>
-    <When Condition=" '$(Configuration)' == 'DebugWin32' OR '$(Configuration)' == 'ReleaseWin32' ">
-      <ItemGroup>
-        <NativeBinaries Include="..\..\..\..\external\libgit-binary\windows\*.*" />
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Target Name="BeforeBuild">
-    <Exec Command="bash build_libgit2.sh" Condition=" '$(Configuration)' == 'DebugGnome' OR '$(Configuration)' == 'ReleaseGnome' " />
-  </Target>
-  <Target Name="AfterBuild">
-     <ItemGroup Condition=" '$(Configuration)' == 'DebugGnome' OR '$(Configuration)' == 'ReleaseGnome' ">
-       <NativeBinaries Include="..\..\..\..\external\libgit2\build\*.so*" />
-     </ItemGroup>
-     <Copy SourceFiles="@(NativeBinaries)" DestinationFolder="$(OutputPath)\" SkipUnchangedFiles="true" />
-  </Target>
+<!--  <Choose>-->
+<!--    <When Condition=" '$(Configuration)' == 'DebugMac' OR '$(Configuration)' == 'ReleaseMac' ">-->
+<!--      <ItemGroup>-->
+<!--        <NativeBinaries Include="..\..\..\..\external\libgit-binary\mac\*.dylib" />-->
+<!--      </ItemGroup>-->
+<!--    </When>-->
+<!--    <When Condition=" '$(Configuration)' == 'DebugWin32' OR '$(Configuration)' == 'ReleaseWin32' ">-->
+<!--      <ItemGroup>-->
+<!--        <NativeBinaries Include="..\..\..\..\external\libgit-binary\windows\*.*" />-->
+<!--      </ItemGroup>-->
+<!--    </When>-->
+<!--  </Choose>-->
+<!--  <Target Name="BeforeBuild">-->
+<!--    <Exec Command="bash build_libgit2.sh" Condition=" '$(Configuration)' == 'DebugGnome' OR '$(Configuration)' == 'ReleaseGnome' " />-->
+<!--  </Target>-->
+<!--  <Target Name="AfterBuild">-->
+<!--     <ItemGroup Condition=" '$(Configuration)' == 'DebugGnome' OR '$(Configuration)' == 'ReleaseGnome' ">-->
+<!--       <NativeBinaries Include="..\..\..\..\external\libgit2\build\*.so*" />-->
+<!--     </ItemGroup>-->
+<!--     <Copy SourceFiles="@(NativeBinaries)" DestinationFolder="$(OutputPath)\" SkipUnchangedFiles="true" />-->
+<!--  </Target>-->
 </Project>

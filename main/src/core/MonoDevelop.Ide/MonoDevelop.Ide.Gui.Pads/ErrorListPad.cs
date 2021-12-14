@@ -1,24 +1,24 @@
 ﻿// ErrorListPad.cs
-//  
+//
 // Author:
 //       Todd Berman <tberman@sevenl.net>
 //       David Makovský <yakeen@sannyas-on.net>
 //       Lluis Sanchez Gual <lluis@novell.com>
-// 
+//
 // Copyright (c) 2004 Todd Berman
 // Copyright (c) 2006 David Makovský
 // Copyright (c) 2009 Novell, Inc (http://www.novell.com)
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -57,6 +57,9 @@ using MonoDevelop.Ide.BuildOutputView;
 using System.Threading.Tasks;
 using MonoDevelop.Core.ProgressMonitoring;
 using MonoDevelop.Core.Instrumentation;
+#if GTK3
+using TreeModel = Gtk.ITreeModel;
+#endif
 
 namespace MonoDevelop.Ide.Gui.Pads
 {
@@ -75,7 +78,7 @@ namespace MonoDevelop.Ide.Gui.Pads
 		Button buildLogBtn;
 		ToggleButton logBtn;
 		Label errorBtnLbl, warnBtnLbl, msgBtnLbl, logBtnLbl;
-		SearchEntry searchEntry;
+		MonoDevelop.Components.SearchEntry searchEntry;
 		string currentSearchPattern = null;
 		Hashtable tasks = new Hashtable ();
 		int errorCount;
@@ -142,9 +145,9 @@ namespace MonoDevelop.Ide.Gui.Pads
 			btn.Child = btnBox;
 
 			return btn;
-		} 
+		}
 
-		Button MakeButton (string image, string name, out Label label) 
+		Button MakeButton (string image, string name, out Label label)
 		{
 			var btnBox = MakeHBox (image, out label);
 
@@ -274,7 +277,7 @@ namespace MonoDevelop.Ide.Gui.Pads
 			TreeModelFilterVisibleFunc filterFunct = new TreeModelFilterVisibleFunc (FilterTasks);
 			filter = new TreeModelFilter (store, null);
 			filter.VisibleFunc = filterFunct;
-			
+
 			sort = new TreeModelSort (filter);
 			sort.SetSortFunc (VisibleColumns.Type, SeverityIterSort);
 			sort.SetSortFunc (VisibleColumns.Project, ProjectIterSort);
@@ -391,7 +394,7 @@ namespace MonoDevelop.Ide.Gui.Pads
 		}
 
 		public ProgressMonitor GetBuildProgressMonitor ()
-		{ 
+		{
 			if (control == null)
 				CreateControl ();
 
@@ -676,11 +679,11 @@ namespace MonoDevelop.Ide.Gui.Pads
 			col = view.AppendColumn (GettextCatalog.GetString ("File"), view.TextRenderer);
 			col.SetCellDataFunc (view.TextRenderer, new Gtk.TreeCellDataFunc (FileDataFunc));
 			col.Resizable = true;
-			
+
 			col = view.AppendColumn (GettextCatalog.GetString ("Project"), view.TextRenderer);
 			col.SetCellDataFunc (view.TextRenderer, new Gtk.TreeCellDataFunc (ProjectDataFunc));
 			col.Resizable = true;
-			
+
 			col = view.AppendColumn (GettextCatalog.GetString ("Path"), view.TextRenderer);
 			col.SetCellDataFunc (view.TextRenderer, new Gtk.TreeCellDataFunc (PathDataFunc));
 			col.Resizable = true;
@@ -690,21 +693,21 @@ namespace MonoDevelop.Ide.Gui.Pads
 			col.Resizable = true;
 		}
 
-		static void ToggleDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter)
+		static void ToggleDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, TreeModel model, Gtk.TreeIter iter)
 		{
 			Gtk.CellRendererToggle toggleRenderer = (Gtk.CellRendererToggle)cell;
-			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry; 
+			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry;
 			if (task == null) {
 				toggleRenderer.Visible = false;
 				return;
 			}
 			toggleRenderer.Active = task.Completed;
 		}
-		
-		static void LineDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter)
+
+		static void LineDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, TreeModel model, Gtk.TreeIter iter)
 		{
 			Gtk.CellRendererText textRenderer = (Gtk.CellRendererText)cell;
-			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry; 
+			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry;
 			if (task == null) {
 				textRenderer.Text = "";
 				return;
@@ -712,10 +715,10 @@ namespace MonoDevelop.Ide.Gui.Pads
 			SetText (textRenderer, model, iter, task, task.Line != 0 ? task.Line.ToString () : "");
 		}
 
-		static void DescriptionDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter)
+		static void DescriptionDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, TreeModel model, Gtk.TreeIter iter)
 		{
 			var textRenderer = (CellRendererText)cell;
-			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry; 
+			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry;
 			var text = model.GetValue (iter, DataColumns.Description) as string;
 			if (task == null) {
 				if (model.IterParent (out iter, iter)) {
@@ -732,10 +735,10 @@ namespace MonoDevelop.Ide.Gui.Pads
 			SetText (textRenderer, model, iter, task, text);
 		}
 
-		static void FileDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter)
+		static void FileDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, TreeModel model, Gtk.TreeIter iter)
 		{
 			Gtk.CellRendererText textRenderer = (Gtk.CellRendererText)cell;
-			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry; 
+			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry;
 			if (task == null) {
 				textRenderer.Text = "";
 				return;
@@ -743,22 +746,22 @@ namespace MonoDevelop.Ide.Gui.Pads
 
 			SetText (textRenderer, model, iter, task, task.GetFile ());
 		}
-		
-		static void ProjectDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter)
+
+		static void ProjectDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, TreeModel model, Gtk.TreeIter iter)
 		{
 			Gtk.CellRendererText textRenderer = (Gtk.CellRendererText)cell;
-			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry; 
+			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry;
 			if (task == null) {
 				textRenderer.Text = "";
 				return;
 			}
 			SetText (textRenderer, model, iter, task, task.GetProject ());
 		}
-		
-		static void PathDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter)
+
+		static void PathDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, TreeModel model, Gtk.TreeIter iter)
 		{
 			Gtk.CellRendererText textRenderer = (Gtk.CellRendererText)cell;
-			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry; 
+			TaskListEntry task = model.GetValue (iter, DataColumns.Task) as TaskListEntry;
 			if (task == null) {
 				textRenderer.Text = "";
 				return;
@@ -766,7 +769,7 @@ namespace MonoDevelop.Ide.Gui.Pads
 			SetText (textRenderer, model, iter, task, task.GetPath ());
 		}
 
-		static void CategoryDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter)
+		static void CategoryDataFunc (Gtk.TreeViewColumn column, Gtk.CellRenderer cell, TreeModel model, Gtk.TreeIter iter)
 		{
 			Gtk.CellRendererText textRenderer = (Gtk.CellRendererText)cell;
 			var task = model.GetValue (iter, DataColumns.Task) as TaskListEntry;
@@ -776,19 +779,19 @@ namespace MonoDevelop.Ide.Gui.Pads
 			}
 			SetText (textRenderer, model, iter, task, task.Category ?? "");
 		}
-		
+
 		static void SetText (CellRendererText textRenderer, TreeModel model, TreeIter iter, TaskListEntry task, string text)
 		{
 			textRenderer.Text = text;
 			textRenderer.Weight = (int)((bool)model.GetValue (iter, DataColumns.Read) ? Pango.Weight.Normal : Pango.Weight.Bold);
 			textRenderer.Strikethrough = task.Completed;
 		}
-		
+
 		void OnCombineOpen(object sender, EventArgs e)
 		{
 			Clear();
 		}
-		
+
 		void OnCombineClosed(object sender, EventArgs e)
 		{
 			Clear();
@@ -808,21 +811,21 @@ namespace MonoDevelop.Ide.Gui.Pads
 		{
 			buildOutput.Clear ();
 		}
-		
+
 		void OnRowActivated (object o, RowActivatedArgs args)
 		{
 			OnTaskJumpto (null, null);
 		}
-		
+
 		public CompilerResults CompilerResults = null;
-		
+
 		void FilterChanged (object sender, EventArgs e)
 		{
-			
+
 			ShowErrors.Value = errorBtn.Active;
 			ShowWarnings.Value = warnBtn.Active;
 			ShowMessages.Value = msgBtn.Active;
-			
+
 			filter.Refilter ();
 		}
 
@@ -857,7 +860,7 @@ namespace MonoDevelop.Ide.Gui.Pads
 				//Not yet fully added
 				return false;
 			}
-			
+
 			return canShow;
 		}
 
@@ -880,17 +883,17 @@ namespace MonoDevelop.Ide.Gui.Pads
 			UpdateMessagesNum ();
 			UpdatePadIcon ();
 		}
-		
+
 		void TaskChanged (object sender, TaskEventArgs e)
 		{
 			this.view.QueueDraw ();
 		}
-	
+
 		void TaskAdded (object sender, TaskEventArgs e)
 		{
 			AddTasks (e.Tasks);
 		}
-		
+
 		public void AddTasks (IEnumerable<TaskListEntry> tasks)
 		{
 			int n = 1;
@@ -904,7 +907,7 @@ namespace MonoDevelop.Ide.Gui.Pads
 			}
 			filter.Refilter ();
 		}
-		
+
 		public void AddTask (TaskListEntry t)
 		{
 			AddTaskInternal (t);
@@ -916,17 +919,17 @@ namespace MonoDevelop.Ide.Gui.Pads
 			if (tasks.Contains (t)) return;
 
 			Xwt.Drawing.Image stock;
-			
+
 			switch (t.Severity) {
 				case TaskSeverity.Error:
 					stock = iconError;
 					errorCount++;
 					UpdateErrorsNum ();
-					break; 
+					break;
 				case TaskSeverity.Warning:
 					stock = iconWarning;
 					warningCount++;
-					UpdateWarningsNum ();	
+					UpdateWarningsNum ();
 					break;
 				default:
 					stock = iconInfo;
@@ -934,7 +937,7 @@ namespace MonoDevelop.Ide.Gui.Pads
 					UpdateMessagesNum ();
 					break;
 			}
-			
+
 			tasks [t] = t;
 
 			var indexOfNewLine = t.Description.IndexOfAny (new [] { '\n', '\r' });
@@ -948,7 +951,7 @@ namespace MonoDevelop.Ide.Gui.Pads
 			UpdatePadIcon ();
 		}
 
-		void UpdateErrorsNum () 
+		void UpdateErrorsNum ()
 		{
 			errorBtnLbl.Text = " " + string.Format(GettextCatalog.GetPluralString("{0} Error", "{0} Errors", errorCount), errorCount);
 			errorBtn.Accessible.SetTitle (errorBtnLbl.Text);
@@ -975,7 +978,7 @@ namespace MonoDevelop.Ide.Gui.Pads
 			else
 				Window.Icon = "md-errors-list";
 		}
-		
+
 		private void ItemToggled (object o, ToggledArgs args)
 		{
 			Gtk.TreeIter iter;
@@ -991,27 +994,27 @@ namespace MonoDevelop.Ide.Gui.Pads
 		{
 			TaskListEntry aTask = model.GetValue(a, DataColumns.Task) as TaskListEntry,
 			     zTask = model.GetValue(z, DataColumns.Task) as TaskListEntry;
-			     
+
 			return (aTask != null && zTask != null) ?
 			       aTask.Severity.CompareTo(zTask.Severity) :
 			       0;
 		}
-		
+
 		static int ProjectIterSort (TreeModel model, TreeIter a, TreeIter z)
 		{
 			TaskListEntry aTask = model.GetValue (a, DataColumns.Task) as TaskListEntry,
 			     zTask = model.GetValue (z, DataColumns.Task) as TaskListEntry;
-			     
+
 			return (aTask != null && zTask != null) ?
 			       string.Compare (aTask.GetProject (), zTask.GetProject (), StringComparison.Ordinal) :
 			       0;
 		}
-		
+
 		static int FileIterSort (TreeModel model, TreeIter a, TreeIter z)
 		{
 			TaskListEntry aTask = model.GetValue (a, DataColumns.Task) as TaskListEntry,
 			     zTask = model.GetValue (z, DataColumns.Task) as TaskListEntry;
-			     
+
 			return (aTask != null && zTask != null) ?
 			       aTask.FileName.CompareTo (zTask.FileName) :
 			       0;
@@ -1061,7 +1064,7 @@ namespace MonoDevelop.Ide.Gui.Pads
 			}
 		}
 
-		async Task OpenBuildOutputViewDocument () 
+		async Task OpenBuildOutputViewDocument ()
 		{
 			if (buildOutputViewContent == null) {
 				buildOutputViewContent = new BuildOutputViewContent (buildOutput);

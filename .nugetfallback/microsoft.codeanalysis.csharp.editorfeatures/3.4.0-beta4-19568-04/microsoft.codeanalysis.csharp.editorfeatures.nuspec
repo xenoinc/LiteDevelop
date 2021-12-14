@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.CodeAnalysis.CSharp.EditorFeatures</id>
+    <version>3.4.0-beta4-19568-04</version>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <license type="expression">Apache-2.0</license>
+    <licenseUrl>https://licenses.nuget.org/Apache-2.0</licenseUrl>
+    <projectUrl>https://github.com/dotnet/roslyn</projectUrl>
+    <description>.NET Compiler Platform ("Roslyn") support for C# editor features inside the Visual Studio editor.
+    
+      More details at https://aka.ms/roslyn-packages
+      This package was built from the source at https://github.com/dotnet/roslyn/commit/82f2e2541478e239dc4b04f231e90dc2b3dcb422.</description>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <tags>Roslyn CodeAnalysis Compiler CSharp VB VisualBasic Parser Scanner Lexer Emit CodeGeneration Metadata IL Compilation Scripting Syntax Semantics</tags>
+    <serviceable>true</serviceable>
+    <repository type="git" url="https://github.com/dotnet/roslyn" commit="82f2e2541478e239dc4b04f231e90dc2b3dcb422" />
+    <dependencies>
+      <group targetFramework=".NETFramework4.7.2">
+        <dependency id="Microsoft.CodeAnalysis.Common" version="[3.4.0-beta4-19568-04, 3.4.0-beta4-19568-04]" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.CodeAnalysis.CSharp" version="[3.4.0-beta4-19568-04, 3.4.0-beta4-19568-04]" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.CodeAnalysis.EditorFeatures.Common" version="[3.4.0-beta4-19568-04, 3.4.0-beta4-19568-04]" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.CodeAnalysis.EditorFeatures.Text" version="[3.4.0-beta4-19568-04, 3.4.0-beta4-19568-04]" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.CodeAnalysis.Features" version="[3.4.0-beta4-19568-04, 3.4.0-beta4-19568-04]" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.CodeAnalysis.CSharp.Features" version="[3.4.0-beta4-19568-04, 3.4.0-beta4-19568-04]" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.CodeAnalysis.Scripting.Common" version="[3.4.0-beta4-19568-04, 3.4.0-beta4-19568-04]" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.CodeAnalysis.Workspaces.Common" version="[3.4.0-beta4-19568-04, 3.4.0-beta4-19568-04]" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.CodeAnalysis.CSharp.Workspaces" version="[3.4.0-beta4-19568-04, 3.4.0-beta4-19568-04]" exclude="Build,Analyzers" />
+        <dependency id="ICSharpCode.Decompiler" version="4.0.0.4521" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.VisualStudio.Threading" version="16.3.13" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="System.ComponentModel.Composition" targetFramework=".NETFramework4.7.2" />
+      <frameworkAssembly assemblyName="System.IO" targetFramework=".NETFramework4.7.2" />
+      <frameworkAssembly assemblyName="System.Net.Http" targetFramework=".NETFramework4.7.2" />
+      <frameworkAssembly assemblyName="System.Net.WebSockets" targetFramework=".NETFramework4.7.2" />
+      <frameworkAssembly assemblyName="System.Runtime" targetFramework=".NETFramework4.7.2" />
+      <frameworkAssembly assemblyName="System.Security.Cryptography.Algorithms" targetFramework=".NETFramework4.7.2" />
+      <frameworkAssembly assemblyName="System.Security.Cryptography.Encoding" targetFramework=".NETFramework4.7.2" />
+      <frameworkAssembly assemblyName="System.Security.Cryptography.Primitives" targetFramework=".NETFramework4.7.2" />
+      <frameworkAssembly assemblyName="System.Security.Cryptography.X509Certificates" targetFramework=".NETFramework4.7.2" />
+    </frameworkAssemblies>
+  </metadata>
+</package>

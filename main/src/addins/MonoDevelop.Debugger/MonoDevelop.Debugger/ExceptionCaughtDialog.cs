@@ -29,8 +29,9 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-
+#if DD_Mac_TODO
 using Foundation;
+#endif
 using GLib;
 using Gtk;
 
@@ -59,7 +60,9 @@ namespace MonoDevelop.Debugger
 		VBox vboxAroundInnerExceptionMessage, rightVBox, container;
 		Button close, helpLinkButton, innerExceptionHelpLinkButton;
 		TreeView exceptionValueTreeView, stackTraceTreeView;
+#if DD_Mac_TODO
 		MacObjectValueTreeView macExceptionValueTreeView;
+#endif
 		InnerExceptionsTree innerExceptionsTreeView;
 		ObjectValueTreeViewController controller;
 		CheckButton onlyShowMyCodeCheckbox;
@@ -191,11 +194,13 @@ widget ""*.exception_help_link_label"" style ""exception-help-link-label""
 				controller = new ObjectValueTreeViewController ();
 				controller.SetStackFrame (DebuggingService.CurrentFrame);
 				controller.AllowExpanding = true;
-
+#if DD_Mac_TODO
 				if (Platform.IsMac) {
 					macExceptionValueTreeView = controller.GetMacControl (ObjectValueTreeViewFlags.ObjectValuePadFlags);
 					macExceptionValueTreeView.UIElementName = "ExceptionCaughtDialog";
-				} else {
+				} else 
+#endif
+				{
 					exceptionValueTreeView = controller.GetGtkControl (ObjectValueTreeViewFlags.ExceptionCaughtFlags);
 				}
 			} else {
@@ -209,7 +214,7 @@ widget ""*.exception_help_link_label"" style ""exception-help-link-label""
 
 				exceptionValueTreeView = objValueTreeView;
 			}
-
+#if DD_Mac_TODO
 			if (useNewTreeView && Platform.IsMac) {
 				var scrolled = new AppKit.NSScrollView {
 					DocumentView = macExceptionValueTreeView,
@@ -235,7 +240,9 @@ widget ""*.exception_help_link_label"" style ""exception-help-link-label""
 				var host = new GtkNSViewHost (scrolled);
 				host.ShowAll ();
 				scrolledWidget = host;
-			} else {
+			} else 
+#endif
+			{
 				exceptionValueTreeView.ModifyBase (StateType.Normal, Styles.ExceptionCaughtDialog.ValueTreeBackgroundColor.ToGdkColor ());
 				exceptionValueTreeView.ModifyBase (StateType.Active, Styles.ObjectValueTreeActiveBackgroundColor.ToGdkColor ());
 				exceptionValueTreeView.ModifyFont (Pango.FontDescription.FromString (Platform.IsWindows ? "9" : "11"));
@@ -263,7 +270,9 @@ widget ""*.exception_help_link_label"" style ""exception-help-link-label""
 			if (exceptionValueTreeView != null) {
 				exceptionValueTreeView.SetCommonAccessibilityAttributes ("ExceptionCaughtDialog.ExceptionValueTreeView", label, null);
 			} else {
+#if DD_Mac_TODO
 				macExceptionValueTreeView.AccessibilityTitle = new NSString (label.Text);
+#endif
 			}
 
 			var vbox = new VBox ();
