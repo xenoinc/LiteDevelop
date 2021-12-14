@@ -1,6 +1,6 @@
-# NetDevelop
+# LiteDevelop for Linux
 
-Aims to be compliant with both the original MonoDevelop and DotDevelop source - a full-featured IDE for .NET using Gtk.
+LiteDevelop aims to be compliant with both the original MonoDevelop and DotDevelop sources, as a fully featured IDE for .NET using Gtk.
 
 Our goal is to be able to build and debug .NET 6 applications cross-platform.
 
@@ -8,23 +8,27 @@ Our goal is to be able to build and debug .NET 6 applications cross-platform.
 
 ## Current Status
 
-Borrowing from DotDevelop, the code base has been refactored to compile/run again on Linux. Other platforms will follow.
+Picking up where MonoDevelop left off, the code base is beening refactored to compile/run again on Linux and to work with .NET 6.
 
-### What's Different
+### What's Coming Soon
 
-The following commitments are going to be made
+The following commitments are being made:
 
+* Compile .NET 6 on Linux
 * Unify tabs coding standards, using spaces instead of tabs.
 * Merge in outstanding Pull Requests from MonoDevelop
 * Get a .DEB package
-* Find a new name for branding: NetDevelop, SharpStudio, VisualDevelop, VS for Linux.
+* Rebranding Project:
+  * SharpIde, SharpStudio, NetDevelop, VisualDevelop, LiteDevelop, LinuxDevelop, CrossDevelop, or VS for Linux
+* Ability to build Xamarin.Forms on Linux and (_crossing-fingers_) .NET MAUI
+* And more!
 
 ## Contributors
 
-To hack around, get a compiling copy as follows:
+To get started compiling the code:
 
 ```cmd
-git clone -b main https://github.com/dotdevelop/dotdevelop.git
+git clone -b main https://github.com/xenoinc/litedevelop.git
 
 cd dotdevelop/
 
@@ -33,13 +37,11 @@ cd dotdevelop/
 make
 ```
 
-Have a look here: [http://source.monodevelop.com/]
-
 ## NOTE: The ReadMe contents below are outdated
 
 The following sections are from MonoDevelop and will be updated soon.
 
-## Directory organization
+### Directory organization
 
 There are two main directories:
 
@@ -48,7 +50,7 @@ There are two main directories:
 * `extras`: Additional add-ins (each add-in has its own
     tarball/package).
 
-### Compiling
+#### Compiling
 
 If you are building from Git, make sure that you initialize the submodules
 that are part of this repository by executing:
@@ -56,7 +58,7 @@ that are part of this repository by executing:
 
 If you are running a parallel mono installation, make sure to run all the following steps
 while having sourced your mono installation script. (source path/to/my-environment-script)
-See: http://www.mono-project.com/Parallel_Mono_Environments
+See: [http://www.mono-project.com/Parallel_Mono_Environments]
 
 To compile execute:
 `./configure ; make`
@@ -77,18 +79,18 @@ There are two variables you can set when running `configure`:
 
 Disclaimer: Please be aware that the 'extras/JavaBinding' and 'extras/ValaBinding' packages do not currently work. When prompted or by manually selecting them during the './configure --select' step, make sure they stay deselected. (deselected by default)
 
-## Running
+### Running
 
 You can run MonoDevelop from the build directory by executing:
 `make run`
 
-## Debugging
+### Debugging
 
 You can debug MonoDevelop using Visual Studio (on Windows or macOS) with the
 `main/Main.sln` solution. Use the `DebugWin32` configuration on Windows and the
 `DebugMac` configuration on macOS.
 
-## Installing *(Optional)*
+### Installing *(Optional)*
 
 You can install MonoDevelop by running:
 `make install`
@@ -98,27 +100,27 @@ Bear in mind that if you are installing under a custom prefix, you may need to m
 *(It's possible that you need to install for your locale to be
 correctly set.)*
 
-## Packaging for OS X
+### Packaging for OS X
 
 To package MonoDevelop for OS X in a convenient MonoDevelop.app
 file, just do this after MonoDevelop has finished building (with
 `make`): `cd main/build/MacOSX ; make app`.
 You can run MonoDevelop: `open MonoDevelop.app` or build dmg package: `./make-dmg-bundle.sh`
 
-## Dependencies
+### Dependencies
 
 * [Windows](https://github.com/mono/md-website/blob/gh-pages/developers/building-monodevelop.md#prerequisites-and-source)
 * [Unix](http://www.monodevelop.com/developers/building-monodevelop/#linux)
 
-## Special Environment Variables
+### Special Environment Variables
 
-### BUILD_REVISION
+#### BUILD_REVISION
 
->	If this environment variable exists we assume we are compiling inside wrench.
+> If this environment variable exists we assume we are compiling inside wrench.
 > We use this to enable raygun only for 'release' builds and not for normal
 > developer builds compiled on a dev machine with 'make && make run'.
 
-## Known Problems
+### Known Problems
 
 ```
 "The type `GLib.IIcon' is defined in an assembly that is not referenced"
@@ -130,14 +132,17 @@ Make sure to 'make uninstall' or otherwise remove the gtk-sharp3 version and ins
 xbuild may still cache a reference to assemblies that you may have accidentally installed into your mono installation,
 like the gtk-sharp3 as described before. You can delete the cache in $HOME/.config/xbuild/pkgconfig-cache-2.xml
 
-## References
-
-**[MonoDevelop website](http://www.monodevelop.com)**
-
-**[Gnome Human Interface Guidelines (HIG)](https://developer.gnome.org/hig/stable/)**
-
-**[freedesktop.org standards](http://freedesktop.org/Standards/)**
-
 ## Discussion, Bugs, Patches
 
-https://github.com/xenoinc/netdevelop/issues/new *(submit bugs and patches here)*
+_Submit bugs and patches:_
+
+[https://github.com/xenoinc/litedevelop/issues/new]
+
+## References
+
+* [MonoDevelop GitHub](https://github.com/mono/monodevelop)
+* [SharpDevelop GitHub](https://github.com/icsharpcode/SharpDevelop)
+* [DotDevelop GitHub](https://github.com/dotdevelop)
+* [MonoDevelop website](http://www.monodevelop.com)
+* [Gnome Human Interface Guidelines (HIG)](https://developer.gnome.org/hig/stable/)
+* [freedesktop.org standards](http://freedesktop.org/Standards/)
