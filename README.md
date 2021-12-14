@@ -10,6 +10,15 @@ Our goal is to be able to build and debug .NET 6 applications cross-platform.
 
 Borrowing from DotDevelop, the code base has been refactored to compile/run again on Linux. Other platforms will follow.
 
+### What's Different
+
+The following commitments are going to be made
+
+* Unify tabs coding standards, using spaces instead of tabs.
+* Merge in outstanding Pull Requests from MonoDevelop
+* Get a .DEB package
+* Find a new name for branding: NetDevelop, SharpStudio, VisualDevelop, VS for Linux.
+
 ## Contributors
 
 To hack around, get a compiling copy as follows:
