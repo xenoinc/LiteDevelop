@@ -15,7 +15,7 @@ Picking up where MonoDevelop left off, the code base is beening refactored to co
 The following commitments are being made:
 
 * Compile .NET 6 on Linux
-* Clean out stale branches (FINALLY!)
+* Clean out stale branches (_goodbye 388 branches!_)
 * Unify coding standards, using spaces instead of tabs.
 * Merge in outstanding Pull Requests from MonoDevelop
 * Get a .DEB package
