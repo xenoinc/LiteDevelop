@@ -24,14 +24,24 @@ The following commitments are being made:
 * Ability to build Xamarin.Forms on Linux and (_crossing-fingers_) .NET MAUI
 * And more!
 
-## Contributors
+## Compiling
 
-To get started compiling the code:
+### Windows 10
+
+:warning: Currently, it is not building.
+
+### Ubuntu 20.04
+
+The following instructions are what you'll need to build the code from scratch on Ubuntu
 
 ```cmd
-git clone -b main https://github.com/xenoinc/litedevelop.git
+git clone -b main https://github.com/xenoinc/SharpStudio.git
 
 cd LiteDevelop/
+
+git submodule update --init --recursive
+
+sudo apt-get install automake
 
 ./configure --profile=gnome
 
@@ -51,7 +61,7 @@ There are two main directories:
 * `extras`: Additional add-ins (each add-in has its own
     tarball/package).
 
-#### Compiling
+### Compiling (full)
 
 If you are building from Git, make sure that you initialize the submodules
 that are part of this repository by executing:
@@ -123,9 +133,7 @@ You can run MonoDevelop: `open MonoDevelop.app` or build dmg package: `./make-dm
 
 ### Known Problems
 
-```
-"The type `GLib.IIcon' is defined in an assembly that is not referenced"
-```
+> "The type `GLib.IIcon' is defined in an assembly that is not referenced"
 
 This happens when you accidentally installed gtk-sharp3 instead of the 2.12.x branch version.
 Make sure to 'make uninstall' or otherwise remove the gtk-sharp3 version and install the older one.
@@ -137,7 +145,7 @@ like the gtk-sharp3 as described before. You can delete the cache in $HOME/.conf
 
 _Submit bugs and patches:_
 
-[https://github.com/xenoinc/litedevelop/issues/new]
+[https://github.com/xenoinc/SharpStudio/issues/new]
 
 ## References
 
