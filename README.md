@@ -145,7 +145,7 @@ like the gtk-sharp3 as described before. You can delete the cache in $HOME/.conf
 
 _Submit bugs and patches:_
 
-[https://github.com/xenoinc/litedevelop/issues/new]
+[https://github.com/xenoinc/SharpStudio/issues/new]
 
 ## References
 
