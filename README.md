@@ -1,6 +1,6 @@
-# LiteDevelop for Linux
+# SharpStudio for Linux
 
-LiteDevelop aims to be compliant with both the original MonoDevelop and DotDevelop sources, as a fully featured IDE for .NET using Gtk.
+SharpStudio aims to be compliant with both the original MonoDevelop and DotDevelop sources, as a fully featured IDE for .NET using Gtk.
 
 Our goal is to be able to build and debug .NET 6 applications cross-platform.
 
@@ -37,7 +37,7 @@ The following instructions are what you'll need to build the code from scratch o
 ```cmd
 git clone -b main https://github.com/xenoinc/SharpStudio.git
 
-cd LiteDevelop/
+cd SharpStudio/
 
 git submodule update --init --recursive
 
