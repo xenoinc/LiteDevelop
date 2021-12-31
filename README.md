@@ -1,4 +1,4 @@
-# SharpStudio for Linux
+# SharpStudio (formerly, MonoDevelop)
 
 SharpStudio aims to be compliant with both the original MonoDevelop and DotDevelop sources, as a fully featured IDE for .NET using Gtk.
 
